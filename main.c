@@ -80,6 +80,12 @@ IPARK_Obj ipark; // the inverse Park transform object
 SVGEN_Handle svgenHandle; // the handle for the space vector generator
 SVGEN_Obj svgen; // the space vector generator object
 
+TRAJ_Handle     trajHandle_Id; // the handle for the id reference trajectory
+TRAJ_Obj        traj_Id; // the id reference trajectory object
+
+TRAJ_Handle     trajHandle_spd; // the handle for the speed reference trajectory
+TRAJ_Obj        traj_spd; // the speed reference trajectory object
+
 #ifdef CSM_ENABLE
 #pragma DATA_SECTION(halHandle,"rom_accessed_data");
 #endif
@@ -138,6 +144,11 @@ _iq gTorque_Flux_Iq_pu_to_Nm_sf;
 _iq gSpeed_krpm_to_pu_sf = _IQ((float_t)USER_MOTOR_NUM_POLE_PAIRS * 1000.0 / (USER_IQ_FULL_SCALE_FREQ_Hz * 60.0));
 
 _iq gSpeed_hz_to_krpm_sf = _IQ(60.0 / (float_t)USER_MOTOR_NUM_POLE_PAIRS / 1000.0);
+
+_iq gIs_Max_squared_pu = _IQ((USER_MOTOR_MAX_CURRENT * USER_MOTOR_MAX_CURRENT) / (USER_IQ_FULL_SCALE_CURRENT_A * USER_IQ_FULL_SCALE_CURRENT_A));
+
+uint16_t gTrjCnt = 0;
+
 
 // **************************************************************************
 // the functions
@@ -386,6 +397,25 @@ void main(void) {
 	// initialize the space vector generator module
 	svgenHandle = SVGEN_init(&svgen, sizeof(svgen));
 
+    // initialize the speed reference trajectory
+    trajHandle_spd = TRAJ_init(&traj_spd,sizeof(traj_spd));
+
+    // configure the speed reference trajectory
+    TRAJ_setTargetValue(trajHandle_spd,_IQ(0.0));
+    TRAJ_setIntValue(trajHandle_spd,_IQ(0.0));
+    TRAJ_setMinValue(trajHandle_spd,_IQ(-1.0));
+    TRAJ_setMaxValue(trajHandle_spd,_IQ(1.0));
+    TRAJ_setMaxDelta(trajHandle_spd,_IQ(USER_MAX_ACCEL_Hzps / USER_IQ_FULL_SCALE_FREQ_Hz / USER_ISR_FREQ_Hz));
+
+    trajHandle_Id = TRAJ_init(&traj_Id,sizeof(traj_Id));
+
+	// configure the Id reference trajectory
+	TRAJ_setTargetValue(trajHandle_Id, _IQ(0.0));
+	TRAJ_setIntValue(trajHandle_Id, _IQ(0.0));
+	TRAJ_setMinValue(trajHandle_Id, _IQ(-USER_MOTOR_MAX_CURRENT / USER_IQ_FULL_SCALE_CURRENT_A));
+	TRAJ_setMaxValue(trajHandle_Id, _IQ(USER_MOTOR_MAX_CURRENT / USER_IQ_FULL_SCALE_CURRENT_A));
+	TRAJ_setMaxDelta(trajHandle_Id, _IQ(USER_MOTOR_RES_EST_CURRENT / USER_IQ_FULL_SCALE_CURRENT_A / USER_ISR_FREQ_Hz));
+
 	// setup faults
 	HAL_setupFaults(halHandle);
 
@@ -451,13 +481,33 @@ void main(void) {
 
 				// enable the PWM
 				HAL_enablePwm(halHandle);
-			} else  // Flag_enableSys is set AND Flag_Run_Identify is not set
-			{
+
+                // set trajectory target for speed reference
+                TRAJ_setTargetValue(trajHandle_spd, _IQmpy(gMotorVars.SpeedRef_krpm, gSpeed_krpm_to_pu_sf));
+
+                // set trajectory target for Id reference
+                TRAJ_setTargetValue(trajHandle_Id, gIdq_ref_pu.value[0]);
+
+			} else {
+				// Flag_enableSys is set AND Flag_Run_Identify is not set
+
 				// set estimator to Idle
 				EST_setIdle(estHandle);
 
 				// disable the PWM
 				HAL_disablePwm(halHandle);
+
+                // clear the speed reference trajectory
+                TRAJ_setTargetValue(trajHandle_spd, _IQ(0.0));
+                TRAJ_setIntValue(trajHandle_spd, _IQ(0.0));
+
+                // clear the Id reference trajectory
+                TRAJ_setTargetValue(trajHandle_Id, _IQ(0.0));
+                TRAJ_setIntValue(trajHandle_Id, _IQ(0.0));
+
+                // configure trajectory Id defaults depending on motor type
+				TRAJ_setMinValue(trajHandle_Id, _IQ(-USER_MOTOR_MAX_CURRENT / USER_IQ_FULL_SCALE_CURRENT_A));
+				TRAJ_setMaxDelta(trajHandle_Id, _IQ(USER_MOTOR_RES_EST_CURRENT / USER_IQ_FULL_SCALE_CURRENT_A / USER_ISR_FREQ_Hz));
 
 				// clear integrator outputs
 				PID_setUi(pidHandle[0], _IQ(0.0));
@@ -471,6 +521,9 @@ void main(void) {
 
 			// update the global variables
 			updateGlobalVariables(estHandle);
+
+            // set the speed acceleration
+            TRAJ_setMaxDelta(trajHandle_spd, _IQmpy(MAX_ACCEL_KRPMPS_SF, gMotorVars.MaxAccel_krpmps));
 
 			// enable/disable the forced angle
 			EST_setFlag_enableForceAngle(estHandle, gMotorVars.Flag_enableForceAngle);
@@ -531,11 +584,14 @@ interrupt void mainISR(void) {
 	// are returned.
 	CLARKE_run(clarkeHandle_V, &gAdcData.V, &Vab_pu);
 
-	// run the estimator
+	// run a trajectory for Id reference, so the reference changes with a ramp instead of a step
+    TRAJ_run(trajHandle_Id);
+
+    // run the estimator
 	// The speed reference is needed so that the proper sign of the forced
 	// angle is calculated. When the estimator does not do motor ID as in this
 	// lab, only the sign of the speed reference is used
-	EST_run(estHandle, &Iab_pu, &Vab_pu, gAdcData.dcBus, gMotorVars.SpeedRef_pu);
+    EST_run(estHandle, &Iab_pu, &Vab_pu, gAdcData.dcBus, TRAJ_getIntValue(trajHandle_spd));
 
 	// generate the motor electrical angle
 	angle_pu = EST_getAngle_pu(estHandle);
@@ -553,22 +609,25 @@ interrupt void mainISR(void) {
 		_iq outMax_pu;
 
 		// when appropriate, run the PID speed controller
-		// This mechanism provides the decimation for the speed loop.
-		if (pidCntSpeed >= USER_NUM_CTRL_TICKS_PER_SPEED_TICK) {
-			// Reset the Speed PID execution counter.
+		if (pidCntSpeed++ >= USER_NUM_CTRL_TICKS_PER_SPEED_TICK) {
+			// calculate Id reference squared
+			_iq Id_ref_squared_pu = _IQmpy(PID_getRefValue(pidHandle[1]), PID_getRefValue(pidHandle[1]));
+
+			// Take into consideration that Iq^2+Id^2 = Is^2
+			_iq Iq_Max_pu = _IQsqrt(gIs_Max_squared_pu - Id_ref_squared_pu);
+
+			// clear counter
 			pidCntSpeed = 0;
 
-			// The next instruction executes the PI speed controller and places
-			// its output in Idq_ref_pu.value[1], which is the input reference
-			// value for the q-axis current controller.
-			PID_run_spd(pidHandle[0], gMotorVars.SpeedRef_pu, speed_pu, &(gIdq_ref_pu.value[1]));
-		} else {
-			// increment counter
-			pidCntSpeed++;
+			// Set new min and max for the speed controller output
+			PID_setMinMax(pidHandle[0], -Iq_Max_pu, Iq_Max_pu);
+
+			// run speed controller
+			PID_run_spd(pidHandle[0], TRAJ_getIntValue(trajHandle_spd), speed_pu, &(gIdq_ref_pu.value[1]));
 		}
 
-		// Get the reference value for the d-axis current controller.
-		refValue = gIdq_ref_pu.value[0];
+		// get the reference value from the trajectory module
+		refValue = TRAJ_getIntValue(trajHandle_Id);
 
 		// Get the actual value of Id
 		fbackValue = gIdq_pu.value[0];
@@ -639,8 +698,12 @@ interrupt void mainISR(void) {
 		// There is no need to do an inverse CLARKE transform, as this is
 		// handled in the SVGEN_run function.
 		SVGEN_run(svgenHandle, &Vab_pu, &(gPwmData.Tabc));
-	} else  // gMotorVars.Flag_Run_Identify = 0
-	{
+
+        gTrjCnt++;
+
+	} else {
+		// gMotorVars.Flag_Run_Identify = 0
+
 		// disable the PWM
 		HAL_disablePwm(halHandle);
 
@@ -652,6 +715,14 @@ interrupt void mainISR(void) {
 
 	// write to the PWM compare registers, and then we are done!
 	HAL_writePwmData(halHandle, &gPwmData);
+
+    if (gTrjCnt >= gUserParams.numCtrlTicksPerTrajTick) {
+        // clear counter
+        gTrjCnt = 0;
+
+        // run a trajectory for speed reference, so the reference changes with a ramp instead of a step
+        TRAJ_run(trajHandle_spd);
+    }
 
 	return;
 } // end of mainISR() function
