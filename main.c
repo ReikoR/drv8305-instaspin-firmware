@@ -385,11 +385,8 @@ void main(void) {
 		PID_setUi(pidHandle[2], _IQ(0.0));
 	}
 
-	// initialize the speed reference in kilo RPM where base speed is
-	// USER_IQ_FULL_SCALE_FREQ_Hz.
-	// Set 10 Hz electrical frequency as initial value, so the kRPM value would
-	// be: 10 * 60 / motor pole pairs / 1000.
-	gMotorVars.SpeedRef_krpm = _IQmpy(_IQ(10.0), gSpeed_hz_to_krpm_sf);
+	// Initialize speed to 0
+	gMotorVars.SpeedRef_krpm = _IQ(0.0);
 
 	// initialize the inverse Park module
 	iparkHandle = IPARK_init(&ipark, sizeof(ipark));
