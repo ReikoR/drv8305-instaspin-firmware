@@ -344,7 +344,7 @@ void main(void) {
 
 		// The following instructions load the parameters for the speed PI
 		// controller.
-		PID_setGains(pidHandle[0], _IQ(1.0), _IQ(0.01), _IQ(0.0));
+		PID_setGains(pidHandle[0], _IQ(4.0), _IQ(0.05), _IQ(0.0));
 
 		// The current limit is performed by the limits placed on the speed PI
 		// controller output.  In the following statement, the speed
