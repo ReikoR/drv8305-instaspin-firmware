@@ -992,13 +992,13 @@ void HAL_setupGpios(HAL_Handle handle)
   GPIO_setHigh(obj->gpioHandle,GPIO_Number_7);
   GPIO_setDirection(obj->gpioHandle,GPIO_Number_7,GPIO_Direction_Output);
 
-  // No Connection
+  // RS485 DE
   GPIO_setMode(obj->gpioHandle,GPIO_Number_12,GPIO_12_Mode_GeneralPurpose);
 
-  // SPI_SDI if JP4 is soldered, No Connection if JP4 is not soldered
+  // SPI_SDI
   GPIO_setMode(obj->gpioHandle,GPIO_Number_16,GPIO_16_Mode_SPISIMOA);
 
-  // SPI_SDO if JP6 is soldered, No Connection if JP6 is not soldered
+  // SPI_SDO
   GPIO_setMode(obj->gpioHandle,GPIO_Number_17,GPIO_17_Mode_SPISOMIA);
   GPIO_setPullUp(obj->gpioHandle, GPIO_Number_17, GPIO_PullUp_Disable);
 
@@ -1008,20 +1008,26 @@ void HAL_setupGpios(HAL_Handle handle)
   // SPI_SCS
   GPIO_setMode(obj->gpioHandle,GPIO_Number_19,GPIO_19_Mode_SPISTEA_NOT);
 
+  // RX
+  GPIO_setPullUp(obj->gpioHandle, GPIO_Number_28, GPIO_PullUp_Enable);
+  GPIO_setQualification(obj->gpioHandle, GPIO_Number_28, GPIO_Qual_ASync);
+  GPIO_setMode(obj->gpioHandle,GPIO_Number_28,GPIO_28_Mode_SCIRXDA);
+
+  // TX
+  GPIO_setPullUp(obj->gpioHandle, GPIO_Number_29, GPIO_PullUp_Enable);
+  GPIO_setMode(obj->gpioHandle,GPIO_Number_29,GPIO_29_Mode_SCITXDA);
+
   // nFAULT
-  GPIO_setMode(obj->gpioHandle,GPIO_Number_28,GPIO_28_Mode_TZ2_NOT);
+  GPIO_setMode(obj->gpioHandle, GPIO_Number_32, GPIO_32_Mode_GeneralPurpose);
+  GPIO_setDirection(obj->gpioHandle, GPIO_Number_32, GPIO_Direction_Input);
 
-  // No connection (TX)
-  GPIO_setMode(obj->gpioHandle,GPIO_Number_29,GPIO_29_Mode_GeneralPurpose);
+  // Connected to ground
+  GPIO_setMode(obj->gpioHandle, GPIO_Number_33, GPIO_33_Mode_GeneralPurpose);
+  GPIO_setDirection(obj->gpioHandle, GPIO_Number_33, GPIO_Direction_Input);
 
-  // SPI_SDI if JP5 is soldered, No Connection if JP5 is not soldered
-  GPIO_setMode(obj->gpioHandle,GPIO_Number_32,GPIO_32_Mode_GeneralPurpose);
-
-  // SPI_SDO if JP7 is soldered, No Connection if JP7 is not soldered
-  GPIO_setMode(obj->gpioHandle,GPIO_Number_33,GPIO_33_Mode_GeneralPurpose);
-
-  // No Connection
-  GPIO_setMode(obj->gpioHandle,GPIO_Number_34,GPIO_34_Mode_GeneralPurpose);
+  // ID2
+  GPIO_setMode(obj->gpioHandle, GPIO_Number_34, GPIO_34_Mode_GeneralPurpose);
+  GPIO_setDirection(obj->gpioHandle, GPIO_Number_34, GPIO_Direction_Input);
 
   // JTAG
   GPIO_setMode(obj->gpioHandle,GPIO_Number_35,GPIO_35_Mode_JTAG_TDI);
