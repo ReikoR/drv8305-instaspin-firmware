@@ -122,16 +122,16 @@ extern "C" {
 //! \brief ADC current offsets for A, B, and C phases
 //! \brief One-time hardware dependent, though the calibration can be done at run-time as well
 //! \brief After initial board calibration these values should be updated for your specific hardware so they are available after compile in the binary to be loaded to the controller
-#define   I_A_offset (1.210729778)  // BOOSTXL-DRV8305EVM = 1.047175646
-#define   I_B_offset (1.209441483)  // BOOSTXL-DRV8305EVM = 1.044038892
-#define   I_C_offset (1.209092796)  // BOOSTXL-DRV8305EVM = 1.040363491
+#define   I_A_offset (0.8245109916)
+#define   I_B_offset (0.8258063197)
+#define   I_C_offset (0.8240211606)
 
 //! \brief ADC voltage offsets for A, B, and C phases
 //! \brief One-time hardware dependent, though the calibration can be done at run-time as well
 //! \brief After initial board calibration these values should be updated for your specific hardware so they are available after compile in the binary to be loaded to the controller
-#define   V_A_offset (0.5084558129) // BOOSTXL-DRV8305EVM = 0.5256254077
-#define   V_B_offset (0.5074239969) // BOOSTXL-DRV8305EVM = 0.5250559449
-#define   V_C_offset (0.5065535307) // BOOSTXL-DRV8305EVM = 0.5247237682
+#define   V_A_offset (0.4940481186)
+#define   V_B_offset (0.4929640293)
+#define   V_C_offset (0.4901292324)
 
 
 //! \brief CLOCKS & TIMERS
