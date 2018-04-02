@@ -85,12 +85,12 @@ extern "C" {
 //! \brief WARNING: if you know the value of your Bemf constant, and you know you are operating at a multiple speed due to field weakening, be sure to set this value higher than the expected Bemf voltage
 //! \brief It is recommended to start with a value ~3x greater than the USER_ADC_FULL_SCALE_VOLTAGE_V and increase to 4-5x if scenarios where a Bemf calculation may exceed these limits
 //! \brief This value is also used to calculate the minimum flux value: USER_IQ_FULL_SCALE_VOLTAGE_V/USER_EST_FREQ_Hz/0.7
-#define USER_IQ_FULL_SCALE_VOLTAGE_V      (24.0)   // 24.0 Set to Vbus
+#define USER_IQ_FULL_SCALE_VOLTAGE_V      (16.0)   // Set to Vbus
 
 //! \brief Defines the maximum voltage at the input to the AD converter
 //! \brief The value that will be represented by the maximum ADC input (3.3V) and conversion (0FFFh)
 //! \brief Hardware dependent, this should be based on the voltage sensing and scaling to the ADC input
-#define USER_ADC_FULL_SCALE_VOLTAGE_V       (44.30)  // BOOSTXL-DRV8305EVM = 44.30 V
+#define USER_ADC_FULL_SCALE_VOLTAGE_V       (26.314)
 
 //! \brief Defines the voltage scale factor for the system
 //! \brief Compile time calculation for scale factor (ratio) used throughout the system
@@ -99,12 +99,12 @@ extern "C" {
 //! \brief Defines the full scale current for the IQ variables, A
 //! \brief All currents are converted into (pu) based on the ratio to this value
 //! \brief WARNING: this value MUST be larger than the maximum current readings that you are expecting from the motor or the reading will roll over to 0, creating a control issue 
-#define USER_IQ_FULL_SCALE_CURRENT_A         (24.0) // BOOSTXL-DRV8305EVM = 24.0 A
+#define USER_IQ_FULL_SCALE_CURRENT_A         (20.0)
 
 //! \brief Defines the maximum current at the AD converter
 //! \brief The value that will be represented by the maximum ADC input (3.3V) and conversion (0FFFh)
 //! \brief Hardware dependent, this should be based on the current sensing and scaling to the ADC input
-#define USER_ADC_FULL_SCALE_CURRENT_A        (47.14)  // BOOSTXL-DRV8305EVM = 47.14 A
+#define USER_ADC_FULL_SCALE_CURRENT_A        (33.0)
 
 //! \brief Defines the current scale factor for the system
 //! \brief Compile time calculation for scale factor (ratio) used throughout the system
@@ -298,7 +298,7 @@ extern "C" {
 // **************************************************************************
 //! \brief Defines the analog voltage filter pole location, Hz
 //! \brief Must match the hardware filter for Vph
-#define USER_VOLTAGE_FILTER_POLE_Hz  (344.62)   // BOOSTXL-DRV8305 = 344.62 Hz
+#define USER_VOLTAGE_FILTER_POLE_Hz  (364.682)
 
 //! \brief Defines the analog voltage filter pole location, rad/s
 //! \brief Compile time calculation from Hz to rad/s
