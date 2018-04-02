@@ -334,6 +334,7 @@ extern "C" {
 
 //! \brief Define each motor with a unique name and ID number
 // BLDC & SMPM motors
+#define multistar_4108_380kv        1
 #define Estun_EMJ_04APB22           101
 #define Anaheim_BLY172S             102
 #define My_Motor                    104
@@ -360,8 +361,9 @@ extern "C" {
 //! \brief Uncomment the motor which should be included at compile
 //! \brief These motor ID settings and motor parameters are then available to be used by the control system
 //! \brief Once your ideal settings and parameters are identified update the motor section here so it is available in the binary code
+#define USER_MOTOR multistar_4108_380kv
 //#define USER_MOTOR Estun_EMJ_04APB22
-#define USER_MOTOR Anaheim_BLY172S
+//#define USER_MOTOR Anaheim_BLY172S
 //#define USER_MOTOR hobby_3p5T
 //#define USER_MOTOR hobby_4p5T
 //#define USER_MOTOR My_Motor
@@ -378,8 +380,21 @@ extern "C" {
 //#define USER_MOTOR Kinetek_YDQ1p3_4
 //#define USER_MOTOR LPKF_CAD_CAM
 
+#if (USER_MOTOR == multistar_4108_380kv)
+#define USER_MOTOR_TYPE                 MOTOR_Type_Pm
+#define USER_MOTOR_NUM_POLE_PAIRS       (11)
+#define USER_MOTOR_Rr                   (NULL)
+#define USER_MOTOR_Rs                   (0.0993900299)
+#define USER_MOTOR_Ls_d                 (1.89197344e-05)
+#define USER_MOTOR_Ls_q                 (1.89197344e-05)
+#define USER_MOTOR_RATED_FLUX           (0.00854411535)
+#define USER_MOTOR_MAGNETIZING_CURRENT  (NULL)
+#define USER_MOTOR_RES_EST_CURRENT      (1.0)
+#define USER_MOTOR_IND_EST_CURRENT      (-1.0)
+#define USER_MOTOR_MAX_CURRENT          (10.0)
+#define USER_MOTOR_FLUX_EST_FREQ_Hz     (100.0)
 
-#if (USER_MOTOR == Estun_EMJ_04APB22)                  // Name must match the motor #define
+#elif (USER_MOTOR == Estun_EMJ_04APB22)                  // Name must match the motor #define
 #define USER_MOTOR_TYPE                 MOTOR_Type_Pm  // Motor_Type_Pm (All Synchronous: BLDC, PMSM, SMPM, IPM) or Motor_Type_Induction (Asynchronous ACI)
 #define USER_MOTOR_NUM_POLE_PAIRS       (4)            // PAIRS, not total poles. Used to calculate user RPM from rotor Hz only
 #define USER_MOTOR_Rr                   (NULL)         // Induction motors only, else NULL
