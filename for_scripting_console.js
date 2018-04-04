@@ -8,6 +8,7 @@ expAdd ("gMotorVars.EstState");
 
 expAdd ("gMotorVars.SpeedRef_krpm", getQValue(24));
 expAdd ("gMotorVars.Speed_krpm", getQValue(24));
+expAdd ("gMotorVars.MaxAccel_krpmps", getQValue(24));
 
 expAdd ("gMotorVars.MagnCurr_A");
 expAdd ("gMotorVars.Rr_Ohm");
