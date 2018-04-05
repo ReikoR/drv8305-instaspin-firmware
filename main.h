@@ -251,6 +251,10 @@ typedef struct _MOTOR_Vars_t_
 //!
 interrupt void mainISR(void);
 
+//! \brief The SCI-A receive interrupt service (ISR) routine
+//!
+interrupt void sciARxISR(void);
+
 void runCurrentReconstruction(void);
 
 

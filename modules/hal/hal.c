@@ -672,6 +672,9 @@ HAL_Handle HAL_init(void *pMemory,const size_t numBytes)
   // initialize drv8305 interface
   obj->drv8305Handle = DRV8305_init(&obj->drv8305,sizeof(obj->drv8305));
 
+  // initialize the SCI handle
+  obj->sciAHandle = SCI_init((void *)SCIA_BASE_ADDR,sizeof(SCI_Obj));
+
   return(handle);
 } // end of HAL_init() function
 
@@ -756,6 +759,10 @@ void HAL_setParams(HAL_Handle handle,const USER_Params *pUserParams)
 
   // setup the spiA
   HAL_setupSpiA(handle);
+
+
+  // setup the sciA
+  HAL_setupSciA(handle);
 
 
   // setup the timers
@@ -1369,5 +1376,39 @@ void HAL_setDacParameters(HAL_Handle handle, HAL_DacData_t *pDacData)
 
 	return;
 }	//end of HAL_setDacParameters() function
+
+
+void HAL_setupSciA(HAL_Handle handle)
+{
+    HAL_Obj *obj = (HAL_Obj *)handle;
+    SCI_reset(obj->sciAHandle);
+    SCI_enableTx(obj->sciAHandle);
+    SCI_enableRx(obj->sciAHandle);
+    SCI_disableParity(obj->sciAHandle);
+    SCI_setNumStopBits(obj->sciAHandle,SCI_NumStopBits_One);
+    SCI_setCharLength(obj->sciAHandle,SCI_CharLength_8_Bits);
+    // set baud rate to 150000
+    SCI_setBaudRate(obj->sciAHandle,(SCI_BaudRate_e)(49));
+    SCI_setPriority(obj->sciAHandle,SCI_Priority_FreeRun);
+    SCI_enable(obj->sciAHandle);
+    return;
+    // end of HAL_setupSciA() function
+}
+
+void HAL_enableSciInts(HAL_Handle handle)
+{
+    HAL_Obj *obj = (HAL_Obj *) handle;
+
+    // enable the PIE interrupts associated with the SCI interrupts
+    // enable SCIA RX interrupt in PIE
+    PIE_enableInt(obj->pieHandle, PIE_GroupNumber_9, PIE_InterruptSource_SCIARX);
+
+    // enable SCI RX interrupts
+    // enable SCIA RX interrupt
+    SCI_enableRxInt(obj->sciAHandle);
+
+    // enable the cpu interrupt for SCI interrupts
+    CPU_enableInt(obj->cpuHandle, CPU_IntNumber_9);
+} // end of HAL_enableSciInts() function
 
 // end of file
