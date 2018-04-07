@@ -255,6 +255,8 @@ interrupt void mainISR(void);
 //!
 interrupt void sciARxISR(void);
 
+void serialWrite(char *sendData, int length);
+
 void runCurrentReconstruction(void);
 
 

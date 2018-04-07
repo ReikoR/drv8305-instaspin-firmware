@@ -927,7 +927,7 @@ void HAL_setupClks(HAL_Handle handle)
   CLK_disableOsc2(obj->clkHandle);
 
   // set the low speed clock prescaler
-  CLK_setLowSpdPreScaler(obj->clkHandle,CLK_LowSpdPreScaler_SysClkOut_by_4);
+  CLK_setLowSpdPreScaler(obj->clkHandle,CLK_LowSpdPreScaler_SysClkOut_by_1);
 
   // set the clock out prescaler
   CLK_setClkOutPreScaler(obj->clkHandle,CLK_ClkOutPreScaler_SysClkOut_by_1);
@@ -1001,6 +1001,8 @@ void HAL_setupGpios(HAL_Handle handle)
 
   // RS485 DE
   GPIO_setMode(obj->gpioHandle,GPIO_Number_12,GPIO_12_Mode_GeneralPurpose);
+  GPIO_setDirection(obj->gpioHandle, GPIO_Number_12, GPIO_Direction_Output);
+  GPIO_setLow(obj->gpioHandle, GPIO_Number_12);
 
   // SPI_SDI
   GPIO_setMode(obj->gpioHandle,GPIO_Number_16,GPIO_16_Mode_SPISIMOA);
@@ -1302,7 +1304,7 @@ void HAL_setupSpiA(HAL_Handle handle)
   SPI_enableTxFifoEnh(obj->spiAHandle);
   SPI_enableTxFifo(obj->spiAHandle);
   SPI_setTxDelay(obj->spiAHandle,0x0010);
-  SPI_setBaudRate(obj->spiAHandle,(SPI_BaudRate_e)(0x0001));
+  SPI_setBaudRate(obj->spiAHandle,(SPI_BaudRate_e)(0x000d));
   SPI_setCharLength(obj->spiAHandle,SPI_CharLength_16_Bits);
   SPI_setSuspend(obj->spiAHandle,SPI_TxSuspend_free);
   SPI_enable(obj->spiAHandle);
