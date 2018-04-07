@@ -62,6 +62,8 @@
 // **************************************************************************
 // the globals
 
+uint16_t boardId = 0;
+
 CLARKE_Handle clarkeHandle_I; // the handle for the current Clarke transform
 CLARKE_Obj clarke_I; // the current Clarke transform object
 
@@ -222,6 +224,11 @@ void main(void) {
 	// This function initializes all peripherals through a Hardware Abstraction
 	// Layer (HAL). It uses all values stored in gUserParams.
 	HAL_setParams(halHandle, &gUserParams);
+
+    boardId = GPIO_read(halHandle->gpioHandle, GPIO_Number_34) << 2
+            | AIO_read(halHandle->gpioHandle, AIO_Number_14) << 1
+            | AIO_read(halHandle->gpioHandle, AIO_Number_12);
+
 
 #ifdef FAST_ROM_V1p6
 	{

@@ -1031,10 +1031,20 @@ void HAL_setupGpios(HAL_Handle handle)
   // Connected to ground
   GPIO_setMode(obj->gpioHandle, GPIO_Number_33, GPIO_33_Mode_GeneralPurpose);
   GPIO_setDirection(obj->gpioHandle, GPIO_Number_33, GPIO_Direction_Input);
+  GPIO_setPullUp(obj->gpioHandle, GPIO_Number_33, GPIO_PullUp_Disable);
+
+  // ID0
+  AIO_setMode(obj->gpioHandle, AIO_Number_12, AIO_Enabled);
+  AIO_setDirection(obj->gpioHandle, AIO_Number_12, GPIO_Direction_Input);
+
+  // ID1
+  AIO_setMode(obj->gpioHandle, AIO_Number_14, AIO_Enabled);
+  AIO_setDirection(obj->gpioHandle, AIO_Number_14, GPIO_Direction_Input);
 
   // ID2
   GPIO_setMode(obj->gpioHandle, GPIO_Number_34, GPIO_34_Mode_GeneralPurpose);
   GPIO_setDirection(obj->gpioHandle, GPIO_Number_34, GPIO_Direction_Input);
+  GPIO_setPullUp(obj->gpioHandle, GPIO_Number_34, GPIO_PullUp_Disable);
 
   // JTAG
   GPIO_setMode(obj->gpioHandle,GPIO_Number_35,GPIO_35_Mode_JTAG_TDI);
