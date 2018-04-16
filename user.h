@@ -335,11 +335,13 @@ extern "C" {
 //! \brief Define each motor with a unique name and ID number
 // BLDC & SMPM motors
 #define multistar_4108_380kv        1
+#define propdrive_v2_2836_1400kv    2
 
 //! \brief Uncomment the motor which should be included at compile
 //! \brief These motor ID settings and motor parameters are then available to be used by the control system
 //! \brief Once your ideal settings and parameters are identified update the motor section here so it is available in the binary code
-#define USER_MOTOR multistar_4108_380kv
+//#define USER_MOTOR multistar_4108_380kv
+#define USER_MOTOR propdrive_v2_2836_1400kv
 
 #if (USER_MOTOR == multistar_4108_380kv)
 #define USER_MOTOR_TYPE                 MOTOR_Type_Pm
@@ -354,6 +356,20 @@ extern "C" {
 #define USER_MOTOR_IND_EST_CURRENT      (-1.0)
 #define USER_MOTOR_MAX_CURRENT          (10.0)
 #define USER_MOTOR_FLUX_EST_FREQ_Hz     (100.0)
+
+#elif (USER_MOTOR == propdrive_v2_2836_1400kv)
+#define USER_MOTOR_TYPE                 MOTOR_Type_Pm
+#define USER_MOTOR_NUM_POLE_PAIRS       (6)
+#define USER_MOTOR_Rr                   (NULL)
+#define USER_MOTOR_Rs                   (0.0379200093)
+#define USER_MOTOR_Ls_d                 (6.63721039e-06)
+#define USER_MOTOR_Ls_q                 (6.63721039e-06)
+#define USER_MOTOR_RATED_FLUX           (0.00467513315)
+#define USER_MOTOR_MAGNETIZING_CURRENT  (NULL)
+#define USER_MOTOR_RES_EST_CURRENT      (4.0)
+#define USER_MOTOR_IND_EST_CURRENT      (-4.0)
+#define USER_MOTOR_MAX_CURRENT          (15.0)
+#define USER_MOTOR_FLUX_EST_FREQ_Hz     (50.0)
 
 #else
 #error No motor type specified
