@@ -61,6 +61,8 @@
 #include "hal.h"
 #include "user.h"
 
+#include "hardwareParams.h"
+
 
 // **************************************************************************
 // the defines

@@ -262,7 +262,7 @@ extern "C" {
 #define USER_MAX_ACCEL_EST_Hzps           (5.0)         // 5.0 Default, don't change
 
 //! \brief Defines the maximum current slope for Id trajectory during estimation
-#define USER_MAX_CURRENT_SLOPE           (USER_MOTOR_RES_EST_CURRENT/USER_IQ_FULL_SCALE_CURRENT_A/USER_TRAJ_FREQ_Hz)      // USER_MOTOR_RES_EST_CURRENT/USER_IQ_FULL_SCALE_CURRENT_A/USER_TRAJ_FREQ_Hz Default, don't change
+//#define USER_MAX_CURRENT_SLOPE           (USER_MOTOR_RES_EST_CURRENT/USER_IQ_FULL_SCALE_CURRENT_A/USER_TRAJ_FREQ_Hz)      // USER_MOTOR_RES_EST_CURRENT/USER_IQ_FULL_SCALE_CURRENT_A/USER_TRAJ_FREQ_Hz Default, don't change
 
 //! \brief Defines the fraction of IdRated to use during rated flux estimation
 //!
@@ -341,9 +341,9 @@ extern "C" {
 //! \brief These motor ID settings and motor parameters are then available to be used by the control system
 //! \brief Once your ideal settings and parameters are identified update the motor section here so it is available in the binary code
 //#define USER_MOTOR multistar_4108_380kv
-#define USER_MOTOR propdrive_v2_2836_1400kv
+//#define USER_MOTOR propdrive_v2_2836_1400kv
 
-#if (USER_MOTOR == multistar_4108_380kv)
+/*#if (USER_MOTOR == multistar_4108_380kv)
 #define USER_MOTOR_TYPE                 MOTOR_Type_Pm
 #define USER_MOTOR_NUM_POLE_PAIRS       (11)
 #define USER_MOTOR_Rr                   (NULL)
@@ -373,8 +373,8 @@ extern "C" {
 
 #else
 #error No motor type specified
-#endif
-
+#endif*/
+/*
 #ifndef USER_MOTOR
 #error Motor is not defined in user.h
 #endif
@@ -425,7 +425,7 @@ extern "C" {
 
 #ifndef USER_MOTOR_FLUX_EST_FREQ_Hz
 #error The flux estimation frequency is not defined in user.h
-#endif
+#endif*/
 
 
 // **************************************************************************

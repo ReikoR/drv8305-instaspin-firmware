@@ -201,6 +201,29 @@ void main(void) {
 	// C:/ti/motorware/motorware_1_01_00_1x/docs/motorware_coding_standards.pdf
 	halHandle = HAL_init(&hal, sizeof(hal));
 
+	HAL_setupGpios(halHandle);
+
+	boardId = GPIO_read(halHandle->gpioHandle, GPIO_Number_34) << 2
+	            | AIO_read(halHandle->gpioHandle, AIO_Number_14) << 1
+	            | AIO_read(halHandle->gpioHandle, AIO_Number_12);
+
+	HW_Params motor1Params = {
+			.motor_type = MOTOR_Type_Pm,
+			.motor_numPolePairs = 11,
+			.motor_Rs = 0.0993900299,
+			.motor_Ls_d = 1.89197344e-05,
+			.motor_Ls_q = 1.89197344e-05,
+			.motor_ratedFlux = 0.00854411535,
+			.maxCurrent_resEst = 1.0,
+			.maxCurrent_indEst = -1.0,
+			.maxCurrent = 10.0,
+			.fluxEstFreq_Hz = 100.0
+	};
+
+	USER_setCommonParams(&gUserParams);
+
+	USER_setHardwareParams(&gUserParams, &motor1Params);
+
 	// check for errors in user parameters
 	USER_checkForErrors(&gUserParams);
 
@@ -229,16 +252,12 @@ void main(void) {
 	// values defined in user.h. The values in gUserParams will be then used by
 	// the hardware abstraction layer (HAL) to configure peripherals such as
 	// PWM, ADC, interrupts, etc.
-	USER_setParams(&gUserParams);
+	//USER_setParams(&gUserParams);
 
 	// set the hardware abstraction layer parameters
 	// This function initializes all peripherals through a Hardware Abstraction
 	// Layer (HAL). It uses all values stored in gUserParams.
 	HAL_setParams(halHandle, &gUserParams);
-
-    boardId = GPIO_read(halHandle->gpioHandle, GPIO_Number_34) << 2
-            | AIO_read(halHandle->gpioHandle, AIO_Number_14) << 1
-            | AIO_read(halHandle->gpioHandle, AIO_Number_12);
 
 
 #ifdef FAST_ROM_V1p6

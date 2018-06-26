@@ -739,7 +739,7 @@ void HAL_setParams(HAL_Handle handle,const USER_Params *pUserParams)
 
 
   // setup the GPIOs
-  HAL_setupGpios(handle);
+  //HAL_setupGpios(handle);
 
 
   // setup the flash

@@ -42,6 +42,7 @@
 #include "user.h"
 #include "modules/ctrl/ctrl.h"
 
+#include "hardwareParams.h"
 
 // **************************************************************************
 // the defines
@@ -54,7 +55,7 @@
 // **************************************************************************
 // the functions
 
-void USER_setParams(USER_Params *pUserParams)
+void USER_setCommonParams(USER_Params *pUserParams)
 {
   pUserParams->iqFullScaleCurrent_A = USER_IQ_FULL_SCALE_CURRENT_A;
   pUserParams->iqFullScaleVoltage_V = USER_IQ_FULL_SCALE_VOLTAGE_V;
@@ -105,13 +106,13 @@ void USER_setParams(USER_Params *pUserParams)
 
   pUserParams->estKappa = USER_EST_KAPPAQ;
 
-  pUserParams->motor_type = USER_MOTOR_TYPE;
+  /*pUserParams->motor_type = USER_MOTOR_TYPE;
   pUserParams->motor_numPolePairs = USER_MOTOR_NUM_POLE_PAIRS;
   pUserParams->motor_ratedFlux = USER_MOTOR_RATED_FLUX;
   pUserParams->motor_Rr = USER_MOTOR_Rr;
   pUserParams->motor_Rs = USER_MOTOR_Rs;
   pUserParams->motor_Ls_d = USER_MOTOR_Ls_d;
-  pUserParams->motor_Ls_q = USER_MOTOR_Ls_q;
+  pUserParams->motor_Ls_q = USER_MOTOR_Ls_q;*/
 
 /*  if((pUserParams->motor_Rr > (float_t)0.0) && (pUserParams->motor_Rs > (float_t)0.0))
     {
@@ -122,19 +123,19 @@ void USER_setParams(USER_Params *pUserParams)
       pUserParams->powerWarpGain = USER_POWERWARP_GAIN;
     }
 
-  pUserParams->maxCurrent_resEst = USER_MOTOR_RES_EST_CURRENT;
-  pUserParams->maxCurrent_indEst = USER_MOTOR_IND_EST_CURRENT;
-  pUserParams->maxCurrent = USER_MOTOR_MAX_CURRENT;
+  //pUserParams->maxCurrent_resEst = USER_MOTOR_RES_EST_CURRENT;
+  //pUserParams->maxCurrent_indEst = USER_MOTOR_IND_EST_CURRENT;
+  //pUserParams->maxCurrent = USER_MOTOR_MAX_CURRENT;
 
-  pUserParams->maxCurrentSlope = USER_MAX_CURRENT_SLOPE;
-  pUserParams->maxCurrentSlope_powerWarp = USER_MAX_CURRENT_SLOPE_POWERWARP;
+  //pUserParams->maxCurrentSlope = USER_MAX_CURRENT_SLOPE;
+  //pUserParams->maxCurrentSlope_powerWarp = USER_MAX_CURRENT_SLOPE_POWERWARP;
 
-  pUserParams->IdRated = USER_MOTOR_MAGNETIZING_CURRENT;
+  //pUserParams->IdRated = USER_MOTOR_MAGNETIZING_CURRENT;
   pUserParams->IdRatedFraction_ratedFlux = USER_IDRATED_FRACTION_FOR_RATED_FLUX;
   pUserParams->IdRatedFraction_indEst = USER_IDRATED_FRACTION_FOR_L_IDENT;
   pUserParams->IdRated_delta = USER_IDRATED_DELTA;
 
-  pUserParams->fluxEstFreq_Hz = USER_MOTOR_FLUX_EST_FREQ_Hz;
+  //pUserParams->fluxEstFreq_Hz = USER_MOTOR_FLUX_EST_FREQ_Hz;
 
   pUserParams->ctrlWaitTime[CTRL_State_Error]         = 0;
   pUserParams->ctrlWaitTime[CTRL_State_Idle]          = 0;
@@ -145,7 +146,7 @@ void USER_setParams(USER_Params *pUserParams)
   pUserParams->estWaitTime[EST_State_Idle]            = 0;
   pUserParams->estWaitTime[EST_State_RoverL]          = (uint_least32_t)( 8.0 * USER_EST_FREQ_Hz);
   pUserParams->estWaitTime[EST_State_Rs]              = 0;
-  pUserParams->estWaitTime[EST_State_RampUp]          = (uint_least32_t)((5.0 + USER_MOTOR_FLUX_EST_FREQ_Hz / USER_MAX_ACCEL_EST_Hzps) * USER_EST_FREQ_Hz);
+  //pUserParams->estWaitTime[EST_State_RampUp]          = (uint_least32_t)((5.0 + USER_MOTOR_FLUX_EST_FREQ_Hz / USER_MAX_ACCEL_EST_Hzps) * USER_EST_FREQ_Hz);
   pUserParams->estWaitTime[EST_State_IdRated]         = (uint_least32_t)(30.0 * USER_EST_FREQ_Hz);
   pUserParams->estWaitTime[EST_State_RatedFlux_OL]    = (uint_least32_t)( 0.2 * USER_EST_FREQ_Hz);
   pUserParams->estWaitTime[EST_State_RatedFlux]       = 0;
@@ -188,10 +189,37 @@ void USER_setParams(USER_Params *pUserParams)
 
   pUserParams->ctrlPeriod_sec = USER_CTRL_PERIOD_sec;
 
-  pUserParams->maxNegativeIdCurrent_a = USER_MAX_NEGATIVE_ID_REF_CURRENT_A;
+  //pUserParams->maxNegativeIdCurrent_a = USER_MAX_NEGATIVE_ID_REF_CURRENT_A;
 
   return;
 } // end of USER_setParams() function
+
+
+void USER_setHardwareParams(USER_Params *pUserParams, HW_Params *hwParams) {
+
+}
+
+
+void USER_calculateOtherParams(USER_Params *pUserParams) {
+	//! \brief Defines the maximum current slope for Id trajectory during estimation
+	//#define USER_MAX_CURRENT_SLOPE           (USER_MOTOR_RES_EST_CURRENT/USER_IQ_FULL_SCALE_CURRENT_A/USER_TRAJ_FREQ_Hz)      // USER_MOTOR_RES_EST_CURRENT/USER_IQ_FULL_SCALE_CURRENT_A/USER_TRAJ_FREQ_Hz Default, don't change
+	pUserParams->maxCurrentSlope = pUserParams->maxCurrent_resEst / USER_IQ_FULL_SCALE_CURRENT_A / USER_TRAJ_FREQ_Hz;
+
+	//! \brief Defines the maximum current slope for Id trajectory during PowerWarp
+	//! \brief For Induction motors only, controls how fast Id input can change under PowerWarp control
+	//#define USER_MAX_CURRENT_SLOPE_POWERWARP   (0.3*USER_MOTOR_RES_EST_CURRENT/USER_IQ_FULL_SCALE_CURRENT_A/USER_TRAJ_FREQ_Hz)  // 0.3*RES_EST_CURRENT / IQ_FULL_SCALE_CURRENT / TRAJ_FREQ Typical to produce 1-sec rampup/down
+	pUserParams->maxCurrentSlope_powerWarp = 0.3 * pUserParams->maxCurrent_resEst / USER_IQ_FULL_SCALE_CURRENT_A / USER_TRAJ_FREQ_Hz;
+
+
+	pUserParams->estWaitTime[EST_State_RampUp] = (uint_least32_t)((5.0 + pUserParams->fluxEstFreq_Hz / USER_MAX_ACCEL_EST_Hzps) * USER_EST_FREQ_Hz);
+
+	//! \brief Defines the maximum negative current to be applied in Id reference
+	//! \brief Used in field weakening only, this is a safety setting (e.g. to protect against demagnetization)
+	//! \brief User must also be aware that overall current magnitude [sqrt(Id^2 + Iq^2)] should be kept below any machine design specifications
+	//#define USER_MAX_NEGATIVE_ID_REF_CURRENT_A     (-0.5 * USER_MOTOR_MAX_CURRENT)   // -0.5 * USER_MOTOR_MAX_CURRENT Example, adjust to meet safety needs of your motor
+
+	pUserParams->maxNegativeIdCurrent_a = -0.5 * pUserParams->maxCurrent;
+}
 
 
 void USER_checkForErrors(USER_Params *pUserParams)
