@@ -54,6 +54,7 @@
 
 // platforms
 #include "modules/fast/userParams.h"
+#include "hardwareParams.h"
 
 //!
 //!
@@ -122,16 +123,16 @@ extern "C" {
 //! \brief ADC current offsets for A, B, and C phases
 //! \brief One-time hardware dependent, though the calibration can be done at run-time as well
 //! \brief After initial board calibration these values should be updated for your specific hardware so they are available after compile in the binary to be loaded to the controller
-#define   I_A_offset (0.8245109916)
+/*#define   I_A_offset (0.8245109916)
 #define   I_B_offset (0.8258063197)
-#define   I_C_offset (0.8240211606)
+#define   I_C_offset (0.8240211606)*/
 
 //! \brief ADC voltage offsets for A, B, and C phases
 //! \brief One-time hardware dependent, though the calibration can be done at run-time as well
 //! \brief After initial board calibration these values should be updated for your specific hardware so they are available after compile in the binary to be loaded to the controller
-#define   V_A_offset (0.4940481186)
+/*#define   V_A_offset (0.4940481186)
 #define   V_B_offset (0.4929640293)
-#define   V_C_offset (0.4901292324)
+#define   V_C_offset (0.4901292324)*/
 
 
 //! \brief CLOCKS & TIMERS
@@ -236,7 +237,7 @@ extern "C" {
 //! \brief Defines the maximum negative current to be applied in Id reference
 //! \brief Used in field weakening only, this is a safety setting (e.g. to protect against demagnetization)
 //! \brief User must also be aware that overall current magnitude [sqrt(Id^2 + Iq^2)] should be kept below any machine design specifications
-#define USER_MAX_NEGATIVE_ID_REF_CURRENT_A     (-0.5 * USER_MOTOR_MAX_CURRENT)   // -0.5 * USER_MOTOR_MAX_CURRENT Example, adjust to meet safety needs of your motor
+//#define USER_MAX_NEGATIVE_ID_REF_CURRENT_A     (-0.5 * USER_MOTOR_MAX_CURRENT)   // -0.5 * USER_MOTOR_MAX_CURRENT Example, adjust to meet safety needs of your motor
 
 //! \brief Defines the low speed limit for the flux integrator, pu 
 //! \brief This is the speed range (CW/CCW) at which the ForceAngle object is active, but only if Enabled
@@ -434,7 +435,11 @@ extern "C" {
 
 //! \brief      Sets the user parameter values
 //! \param[in]  pUserParams  The pointer to the user param structure
-extern void USER_setParams(USER_Params *pUserParams);
+extern void USER_setCommonParams(USER_Params *pUserParams);
+
+extern void USER_setHardwareParams(USER_Params *pUserParams, HW_Params *hwParams);
+
+extern void USER_calculateOtherParams(USER_Params *pUserParams);
 
 
 //! \brief      Checks for errors in the user parameter values
@@ -466,22 +471,22 @@ extern void USER_calcPIgains(CTRL_Handle handle);
 
 //! \brief      Computes the scale factor needed to convert from torque created by Ld, Lq, Id and Iq, from per unit to Nm
 //! \return     The scale factor to convert torque from (Ld - Lq) * Id * Iq from per unit to Nm, in IQ24 format
-extern _iq USER_computeTorque_Ls_Id_Iq_pu_to_Nm_sf(void);
+extern _iq USER_computeTorque_Ls_Id_Iq_pu_to_Nm_sf(float_t motor_Ls_d, uint_least16_t motor_numPolePairs);
 
 
 //! \brief      Computes the scale factor needed to convert from torque created by flux and Iq, from per unit to Nm
 //! \return     The scale factor to convert torque from Flux * Iq from per unit to Nm, in IQ24 format
-extern _iq USER_computeTorque_Flux_Iq_pu_to_Nm_sf(void);
+extern _iq USER_computeTorque_Flux_Iq_pu_to_Nm_sf(MOTOR_Type_e motor_type, float_t motor_ratedFlux, uint_least16_t motor_numPolePairs);
 
 
 //! \brief      Computes the scale factor needed to convert from per unit to Wb
 //! \return     The scale factor to convert from flux per unit to flux in Wb, in IQ24 format
-extern _iq USER_computeFlux_pu_to_Wb_sf(void);
+extern _iq USER_computeFlux_pu_to_Wb_sf(MOTOR_Type_e motor_type, float_t motor_ratedFlux, float_t fluxEstFreq_Hz);
 
 
 //! \brief      Computes the scale factor needed to convert from per unit to V/Hz
 //! \return     The scale factor to convert from flux per unit to flux in V/Hz, in IQ24 format
-extern _iq USER_computeFlux_pu_to_VpHz_sf(void);
+extern _iq USER_computeFlux_pu_to_VpHz_sf(MOTOR_Type_e motor_type, float_t motor_ratedFlux, float_t fluxEstFreq_Hz);
 
 
 //! \brief      Computes Flux in Wb or V/Hz depending on the scale factor sent as parameter

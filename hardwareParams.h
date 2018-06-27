@@ -15,6 +15,7 @@ typedef struct _HW_Params_ {
   float_t       maxCurrent;                   //!< Defines the maximum current value, A
   float_t       maxCurrent_resEst;            //!< Defines the maximum current value for resistance estimation, A
   float_t       maxCurrent_indEst;            //!< Defines the maximum current value for inductance estimation, A
+  float_t       IdRated;                      //!< Defines the Id rated current value, A
   float_t       fluxEstFreq_Hz;               //!< Defines the flux estimation frequency, Hz
 } HW_Params;
 

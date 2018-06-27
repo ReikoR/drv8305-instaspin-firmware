@@ -61,8 +61,6 @@
 #include "hal.h"
 #include "user.h"
 
-#include "hardwareParams.h"
-
 
 // **************************************************************************
 // the defines
@@ -74,7 +72,7 @@
 
 //! \brief Defines the speed acceleration scale factor.
 //!
-#define MAX_ACCEL_KRPMPS_SF  _IQ(USER_MOTOR_NUM_POLE_PAIRS*1000.0/USER_TRAJ_FREQ_Hz/USER_IQ_FULL_SCALE_FREQ_Hz/60.0)
+//#define MAX_ACCEL_KRPMPS_SF  _IQ(USER_MOTOR_NUM_POLE_PAIRS*1000.0/USER_TRAJ_FREQ_Hz/USER_IQ_FULL_SCALE_FREQ_Hz/60.0)
 
 //! \brief Initialization values of global variables
 //!
@@ -105,7 +103,7 @@
                          _IQ(0.2), \
                          _IQ(0.0), \
                          _IQ(USER_MAX_VS_MAG_PU), \
-                         _IQ(0.1 * USER_MOTOR_MAX_CURRENT), \
+                         _IQ(1.0), \
                          400, \
                          _IQ(0.0), \
                          _IQ(0.0), \
@@ -283,7 +281,7 @@ void updateGlobalVariables(EST_Handle handle);
 
 //! \brief     Updates version 1p6 of library
 //!
-void softwareUpdate1p6(EST_Handle handle);
+void softwareUpdate1p6(EST_Handle handle, USER_Params *pUserParams);
 
 
 //! \brief     Reset Ls Q format to a higher value when Ls identification starts

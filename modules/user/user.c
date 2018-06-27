@@ -196,7 +196,21 @@ void USER_setCommonParams(USER_Params *pUserParams)
 
 
 void USER_setHardwareParams(USER_Params *pUserParams, HW_Params *hwParams) {
+	pUserParams->motor_type = hwParams->motor_type;
+	pUserParams->motor_numPolePairs = hwParams->motor_numPolePairs;
+	pUserParams->motor_ratedFlux = hwParams->motor_ratedFlux;
+	pUserParams->motor_Rr = hwParams->motor_Rr;
+	pUserParams->motor_Rs = hwParams->motor_Rs;
+	pUserParams->motor_Ls_d = hwParams->motor_Ls_d;
+	pUserParams->motor_Ls_q = hwParams->motor_Ls_q;
 
+	pUserParams->maxCurrent_resEst = hwParams->maxCurrent_resEst;
+	pUserParams->maxCurrent_indEst = hwParams->maxCurrent_indEst;
+	pUserParams->maxCurrent = hwParams->maxCurrent;
+
+	pUserParams->IdRated = hwParams->IdRated;
+
+	pUserParams->fluxEstFreq_Hz = hwParams->fluxEstFreq_Hz;
 }
 
 
@@ -217,7 +231,6 @@ void USER_calculateOtherParams(USER_Params *pUserParams) {
 	//! \brief Used in field weakening only, this is a safety setting (e.g. to protect against demagnetization)
 	//! \brief User must also be aware that overall current magnitude [sqrt(Id^2 + Iq^2)] should be kept below any machine design specifications
 	//#define USER_MAX_NEGATIVE_ID_REF_CURRENT_A     (-0.5 * USER_MOTOR_MAX_CURRENT)   // -0.5 * USER_MOTOR_MAX_CURRENT Example, adjust to meet safety needs of your motor
-
 	pUserParams->maxNegativeIdCurrent_a = -0.5 * pUserParams->maxCurrent;
 }
 
@@ -226,56 +239,58 @@ void USER_checkForErrors(USER_Params *pUserParams)
 {
   USER_setErrorCode(pUserParams, USER_ErrorCode_NoError);
 
+  float_t maxCurrent = pUserParams->maxCurrent;
+
   if((USER_IQ_FULL_SCALE_CURRENT_A <= 0.0) ||
-    (USER_IQ_FULL_SCALE_CURRENT_A <= (0.02 * USER_MOTOR_MAX_CURRENT * USER_IQ_FULL_SCALE_FREQ_Hz / 128.0)) ||
-    (USER_IQ_FULL_SCALE_CURRENT_A <= (2.0 * USER_MOTOR_MAX_CURRENT * USER_IQ_FULL_SCALE_FREQ_Hz * USER_CTRL_PERIOD_sec / 128.0)))
+    (USER_IQ_FULL_SCALE_CURRENT_A <= (0.02 * maxCurrent * USER_IQ_FULL_SCALE_FREQ_Hz / 128.0)) ||
+    (USER_IQ_FULL_SCALE_CURRENT_A <= (2.0 * maxCurrent * USER_IQ_FULL_SCALE_FREQ_Hz * USER_CTRL_PERIOD_sec / 128.0)))
     {
 	  USER_setErrorCode(pUserParams, USER_ErrorCode_iqFullScaleCurrent_A_Low);
     }
 
-  if((USER_IQ_FULL_SCALE_CURRENT_A < USER_MOTOR_MAGNETIZING_CURRENT) ||
-    (USER_IQ_FULL_SCALE_CURRENT_A < USER_MOTOR_RES_EST_CURRENT) ||
-    (USER_IQ_FULL_SCALE_CURRENT_A < USER_MOTOR_IND_EST_CURRENT) ||
-    (USER_IQ_FULL_SCALE_CURRENT_A < USER_MOTOR_MAX_CURRENT))
+  if((USER_IQ_FULL_SCALE_CURRENT_A < pUserParams->IdRated) ||
+    (USER_IQ_FULL_SCALE_CURRENT_A < pUserParams->maxCurrent_resEst) ||
+    (USER_IQ_FULL_SCALE_CURRENT_A < pUserParams->maxCurrent_indEst) ||
+    (USER_IQ_FULL_SCALE_CURRENT_A < maxCurrent))
     {
 	  USER_setErrorCode(pUserParams, USER_ErrorCode_iqFullScaleCurrent_A_Low);
     }
 
-  if((USER_MOTOR_RATED_FLUX > 0.0) && (USER_MOTOR_TYPE == MOTOR_Type_Pm))
+  if((pUserParams->motor_ratedFlux > 0.0) && (pUserParams->motor_type == MOTOR_Type_Pm))
     {
-      if(USER_IQ_FULL_SCALE_VOLTAGE_V >= ((float_t)USER_EST_FREQ_Hz * USER_MOTOR_RATED_FLUX * 0.7))
+      if(USER_IQ_FULL_SCALE_VOLTAGE_V >= ((float_t)USER_EST_FREQ_Hz * pUserParams->motor_ratedFlux * 0.7))
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_iqFullScaleVoltage_V_High);
         }
     }
 
-  if((USER_MOTOR_RATED_FLUX > 0.0) && (USER_MOTOR_TYPE == MOTOR_Type_Induction))
+  if((pUserParams->motor_ratedFlux > 0.0) && (pUserParams->motor_type == MOTOR_Type_Induction))
     {
-      if(USER_IQ_FULL_SCALE_VOLTAGE_V >= ((float_t)USER_EST_FREQ_Hz * USER_MOTOR_RATED_FLUX * 0.05))
+      if(USER_IQ_FULL_SCALE_VOLTAGE_V >= ((float_t)USER_EST_FREQ_Hz * pUserParams->motor_ratedFlux * 0.05))
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_iqFullScaleVoltage_V_High);
         }
     }
 
   if((USER_IQ_FULL_SCALE_VOLTAGE_V <= 0.0) ||
-    (USER_IQ_FULL_SCALE_VOLTAGE_V <= (0.5 * USER_MOTOR_MAX_CURRENT * USER_MOTOR_Ls_d * USER_VOLTAGE_FILTER_POLE_rps)) ||
-    (USER_IQ_FULL_SCALE_VOLTAGE_V <= (0.5 * USER_MOTOR_MAX_CURRENT * USER_MOTOR_Ls_q * USER_VOLTAGE_FILTER_POLE_rps)))
+    (USER_IQ_FULL_SCALE_VOLTAGE_V <= (0.5 * maxCurrent * pUserParams->motor_Ls_d * USER_VOLTAGE_FILTER_POLE_rps)) ||
+    (USER_IQ_FULL_SCALE_VOLTAGE_V <= (0.5 * maxCurrent * pUserParams->motor_Ls_q * USER_VOLTAGE_FILTER_POLE_rps)))
     {
       USER_setErrorCode(pUserParams, USER_ErrorCode_iqFullScaleVoltage_V_Low);
     }
 
   if((USER_IQ_FULL_SCALE_FREQ_Hz > (4.0 * USER_VOLTAGE_FILTER_POLE_Hz)) ||
-    (USER_IQ_FULL_SCALE_FREQ_Hz >= ((128.0 * USER_IQ_FULL_SCALE_CURRENT_A) / (0.02 * USER_MOTOR_MAX_CURRENT))) ||
-    (USER_IQ_FULL_SCALE_FREQ_Hz >= ((128.0 * USER_IQ_FULL_SCALE_CURRENT_A) / (2.0 * USER_MOTOR_MAX_CURRENT * USER_CTRL_PERIOD_sec))) ||
-    (USER_IQ_FULL_SCALE_FREQ_Hz >= (128.0 * (float_t)USER_MOTOR_NUM_POLE_PAIRS * 1000.0 / 60.0)))
+    (USER_IQ_FULL_SCALE_FREQ_Hz >= ((128.0 * USER_IQ_FULL_SCALE_CURRENT_A) / (0.02 * maxCurrent))) ||
+    (USER_IQ_FULL_SCALE_FREQ_Hz >= ((128.0 * USER_IQ_FULL_SCALE_CURRENT_A) / (2.0 * maxCurrent * USER_CTRL_PERIOD_sec))) ||
+    (USER_IQ_FULL_SCALE_FREQ_Hz >= (128.0 * pUserParams->motor_numPolePairs * 1000.0 / 60.0)))
     {
 	  USER_setErrorCode(pUserParams, USER_ErrorCode_iqFullScaleFreq_Hz_High);
     }
 
   if((USER_IQ_FULL_SCALE_FREQ_Hz < 50.0) ||
-    (USER_IQ_FULL_SCALE_FREQ_Hz < USER_MOTOR_FLUX_EST_FREQ_Hz) ||
+    (USER_IQ_FULL_SCALE_FREQ_Hz < pUserParams->fluxEstFreq_Hz) ||
     (USER_IQ_FULL_SCALE_FREQ_Hz < USER_SPEED_POLE_rps) ||
-    (USER_IQ_FULL_SCALE_FREQ_Hz <= ((float_t)USER_MOTOR_NUM_POLE_PAIRS * 1000.0 / (60.0 * 128.0))) ||
+    (USER_IQ_FULL_SCALE_FREQ_Hz <= (pUserParams->motor_numPolePairs * 1000.0 / (60.0 * 128.0))) ||
     (USER_IQ_FULL_SCALE_FREQ_Hz < (USER_MAX_ACCEL_Hzps / ((float_t)USER_TRAJ_FREQ_Hz))) ||
     (USER_IQ_FULL_SCALE_FREQ_Hz < (USER_MAX_ACCEL_EST_Hzps / ((float_t)USER_TRAJ_FREQ_Hz))) ||
     (USER_IQ_FULL_SCALE_FREQ_Hz < ((float_t)USER_R_OVER_L_EST_FREQ_Hz)))
@@ -440,7 +455,7 @@ void USER_checkForErrors(USER_Params *pUserParams)
       USER_setErrorCode(pUserParams, USER_ErrorCode_fluxFraction_Low);
     }
 
-  if(USER_SPEEDMAX_FRACTION_FOR_L_IDENT > (USER_IQ_FULL_SCALE_CURRENT_A / USER_MOTOR_MAX_CURRENT))
+  if(USER_SPEEDMAX_FRACTION_FOR_L_IDENT > (USER_IQ_FULL_SCALE_CURRENT_A / maxCurrent))
     {
       USER_setErrorCode(pUserParams, USER_ErrorCode_indEst_speedMaxFraction_High);
     }
@@ -530,202 +545,202 @@ void USER_checkForErrors(USER_Params *pUserParams)
       USER_setErrorCode(pUserParams, USER_ErrorCode_estKappa_Low);
     }
 
-  if((USER_MOTOR_TYPE != MOTOR_Type_Induction) && (USER_MOTOR_TYPE != MOTOR_Type_Pm))
+  if((pUserParams->motor_type != MOTOR_Type_Induction) && (pUserParams->motor_type != MOTOR_Type_Pm))
     {
       USER_setErrorCode(pUserParams, USER_ErrorCode_motor_type_Unknown);
     }
 
-  if(USER_MOTOR_NUM_POLE_PAIRS < 1)
+  if(pUserParams->motor_numPolePairs < 1)
     {
       USER_setErrorCode(pUserParams, USER_ErrorCode_motor_numPolePairs_Low);
     }
 
-  if((USER_MOTOR_RATED_FLUX != 0.0) && (USER_MOTOR_TYPE == MOTOR_Type_Pm))
+  if((pUserParams->motor_ratedFlux != 0.0) && (pUserParams->motor_type == MOTOR_Type_Pm))
     {
-      if(USER_MOTOR_RATED_FLUX > (USER_IQ_FULL_SCALE_FREQ_Hz * 65536.0 / (float_t)USER_EST_FREQ_Hz / 0.7))
+      if(pUserParams->motor_ratedFlux > (USER_IQ_FULL_SCALE_FREQ_Hz * 65536.0 / pUserParams->estFreq_Hz / 0.7))
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_motor_ratedFlux_High);
         }
 
-      if(USER_MOTOR_RATED_FLUX < (USER_IQ_FULL_SCALE_VOLTAGE_V / (float_t)USER_EST_FREQ_Hz / 0.7))
+      if(pUserParams->motor_ratedFlux < (USER_IQ_FULL_SCALE_VOLTAGE_V / pUserParams->estFreq_Hz / 0.7))
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_motor_ratedFlux_Low);
         }
     }
 
-  if((USER_MOTOR_RATED_FLUX != 0.0) && (USER_MOTOR_TYPE == MOTOR_Type_Induction))
+  if((pUserParams->motor_ratedFlux != 0.0) && (pUserParams->motor_type == MOTOR_Type_Induction))
     {
-      if(USER_MOTOR_RATED_FLUX > (USER_IQ_FULL_SCALE_FREQ_Hz * 65536.0 / (float_t)USER_EST_FREQ_Hz / 0.05))
+      if(pUserParams->motor_ratedFlux > (USER_IQ_FULL_SCALE_FREQ_Hz * 65536.0 / pUserParams->estFreq_Hz / 0.05))
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_motor_ratedFlux_High);
         }
 
-      if(USER_MOTOR_RATED_FLUX < (USER_IQ_FULL_SCALE_VOLTAGE_V / (float_t)USER_EST_FREQ_Hz / 0.05))
+      if(pUserParams->motor_ratedFlux < (USER_IQ_FULL_SCALE_VOLTAGE_V / pUserParams->estFreq_Hz / 0.05))
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_motor_ratedFlux_Low);
         }
     }
 
-  if(USER_MOTOR_TYPE == MOTOR_Type_Pm)
+  if(pUserParams->motor_type == MOTOR_Type_Pm)
     {
-      if(USER_MOTOR_Rr > 0.0)
+      if(pUserParams->motor_Rr > 0.0)
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_motor_Rr_High);
         }
 
-      if(USER_MOTOR_Rr < 0.0)
+      if(pUserParams->motor_Rr < 0.0)
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_motor_Rr_Low);
         }
     }
 
-  if((USER_MOTOR_Rr != 0.0) && (USER_MOTOR_TYPE == MOTOR_Type_Induction))
+  if((pUserParams->motor_Rr != 0.0) && (pUserParams->motor_type == MOTOR_Type_Induction))
     {
-      if(USER_MOTOR_Rr > (0.7 * 65536.0 * USER_IQ_FULL_SCALE_VOLTAGE_V / USER_IQ_FULL_SCALE_CURRENT_A))
+      if(pUserParams->motor_Rr > (0.7 * 65536.0 * USER_IQ_FULL_SCALE_VOLTAGE_V / USER_IQ_FULL_SCALE_CURRENT_A))
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_motor_Rr_High);
         }
 
-      if(USER_MOTOR_Rr < (0.7 * USER_IQ_FULL_SCALE_VOLTAGE_V / (USER_IQ_FULL_SCALE_CURRENT_A * 65536.0)))
+      if(pUserParams->motor_Rr < (0.7 * USER_IQ_FULL_SCALE_VOLTAGE_V / (USER_IQ_FULL_SCALE_CURRENT_A * 65536.0)))
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_motor_Rr_Low);
         }
     }
 
-  if(USER_MOTOR_Rs != 0.0)
+  if(pUserParams->motor_Rs != 0.0)
     {
-      if(USER_MOTOR_Rs > (0.7 * 65536.0 * USER_IQ_FULL_SCALE_VOLTAGE_V / USER_IQ_FULL_SCALE_CURRENT_A))
+      if(pUserParams->motor_Rs > (0.7 * 65536.0 * USER_IQ_FULL_SCALE_VOLTAGE_V / USER_IQ_FULL_SCALE_CURRENT_A))
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_motor_Rs_High);
         }
 
-      if(USER_MOTOR_Rs < (0.7 * USER_IQ_FULL_SCALE_VOLTAGE_V / (USER_IQ_FULL_SCALE_CURRENT_A * 65536.0)))
+      if(pUserParams->motor_Rs < (0.7 * USER_IQ_FULL_SCALE_VOLTAGE_V / (USER_IQ_FULL_SCALE_CURRENT_A * 65536.0)))
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_motor_Rs_Low);
         }
     }
 
-  if(USER_MOTOR_Ls_d != 0.0)
+  if(pUserParams->motor_Ls_d != 0.0)
     {
-      if(USER_MOTOR_Ls_d > (0.7 * 65536.0 * USER_IQ_FULL_SCALE_VOLTAGE_V / (USER_IQ_FULL_SCALE_CURRENT_A * USER_VOLTAGE_FILTER_POLE_rps)))
+      if(pUserParams->motor_Ls_d > (0.7 * 65536.0 * USER_IQ_FULL_SCALE_VOLTAGE_V / (USER_IQ_FULL_SCALE_CURRENT_A * USER_VOLTAGE_FILTER_POLE_rps)))
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_motor_Ls_d_High);
         }
 
-      if(USER_MOTOR_Ls_d < (0.7 * USER_IQ_FULL_SCALE_VOLTAGE_V / (USER_IQ_FULL_SCALE_CURRENT_A * USER_VOLTAGE_FILTER_POLE_rps * 65536.0)))
+      if(pUserParams->motor_Ls_d < (0.7 * USER_IQ_FULL_SCALE_VOLTAGE_V / (USER_IQ_FULL_SCALE_CURRENT_A * USER_VOLTAGE_FILTER_POLE_rps * 65536.0)))
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_motor_Ls_d_Low);
         }
     }
 
-  if(USER_MOTOR_Ls_q != 0.0)
+  if(pUserParams->motor_Ls_q != 0.0)
     {
-      if(USER_MOTOR_Ls_q > (0.7 * 65536.0 * USER_IQ_FULL_SCALE_VOLTAGE_V / (USER_IQ_FULL_SCALE_CURRENT_A * USER_VOLTAGE_FILTER_POLE_rps)))
+      if(pUserParams->motor_Ls_q > (0.7 * 65536.0 * USER_IQ_FULL_SCALE_VOLTAGE_V / (USER_IQ_FULL_SCALE_CURRENT_A * USER_VOLTAGE_FILTER_POLE_rps)))
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_motor_Ls_q_High);
         }
 
-      if(USER_MOTOR_Ls_q < (0.7 * USER_IQ_FULL_SCALE_VOLTAGE_V / (USER_IQ_FULL_SCALE_CURRENT_A * USER_VOLTAGE_FILTER_POLE_rps * 65536.0)))
+      if(pUserParams->motor_Ls_q < (0.7 * USER_IQ_FULL_SCALE_VOLTAGE_V / (USER_IQ_FULL_SCALE_CURRENT_A * USER_VOLTAGE_FILTER_POLE_rps * 65536.0)))
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_motor_Ls_q_Low);
         }
     }
 
-  if(USER_MOTOR_RES_EST_CURRENT > USER_MOTOR_MAX_CURRENT)
+  if(pUserParams->maxCurrent_resEst > maxCurrent)
     {
       USER_setErrorCode(pUserParams, USER_ErrorCode_maxCurrent_resEst_High);
     }
 
-  if(USER_MOTOR_RES_EST_CURRENT < 0.0)
+  if(pUserParams->maxCurrent_resEst < 0.0)
     {
       USER_setErrorCode(pUserParams, USER_ErrorCode_maxCurrent_resEst_Low);
     }
 
-  if(USER_MOTOR_TYPE == MOTOR_Type_Pm)
+  if(pUserParams->motor_type == MOTOR_Type_Pm)
     {
-      if(USER_MOTOR_IND_EST_CURRENT > 0.0)
+      if(pUserParams->maxCurrent_indEst > 0.0)
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_maxCurrent_indEst_High);
         }
 
-      if(USER_MOTOR_IND_EST_CURRENT < (-USER_MOTOR_MAX_CURRENT))
+      if(pUserParams->maxCurrent_indEst < (-maxCurrent))
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_maxCurrent_indEst_Low);
         }
     }
 
-  if(USER_MOTOR_TYPE == MOTOR_Type_Induction)
+  if(pUserParams->motor_type == MOTOR_Type_Induction)
     {
-      if(USER_MOTOR_IND_EST_CURRENT > 0.0)
+      if(pUserParams->maxCurrent_indEst > 0.0)
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_maxCurrent_indEst_High);
         }
 
-      if(USER_MOTOR_IND_EST_CURRENT < 0.0)
+      if(pUserParams->maxCurrent_indEst < 0.0)
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_maxCurrent_indEst_Low);
         }
     }
 
-  if(USER_MOTOR_MAX_CURRENT > USER_IQ_FULL_SCALE_CURRENT_A)
+  if(maxCurrent > USER_IQ_FULL_SCALE_CURRENT_A)
     {
       USER_setErrorCode(pUserParams, USER_ErrorCode_maxCurrent_High);
     }
 
-  if(USER_MOTOR_MAX_CURRENT <= 0.0)
+  if(maxCurrent <= 0.0)
     {
       USER_setErrorCode(pUserParams, USER_ErrorCode_maxCurrent_Low);
     }
 
-  if(USER_MAX_CURRENT_SLOPE > 1.0)
+  if(pUserParams->maxCurrentSlope > 1.0)
     {
       USER_setErrorCode(pUserParams, USER_ErrorCode_maxCurrentSlope_High);
     }
 
-  if(USER_MAX_CURRENT_SLOPE <= 0.0)
+  if(pUserParams->maxCurrentSlope <= 0.0)
     {
       USER_setErrorCode(pUserParams, USER_ErrorCode_maxCurrentSlope_Low);
     }
 
-  if(USER_MAX_CURRENT_SLOPE_POWERWARP > 1.0)
+  if(pUserParams->maxCurrentSlope_powerWarp > 1.0)
     {
       USER_setErrorCode(pUserParams, USER_ErrorCode_maxCurrentSlope_powerWarp_High);
     }
 
-  if(USER_MAX_CURRENT_SLOPE_POWERWARP <= 0.0)
+  if(pUserParams->maxCurrentSlope_powerWarp <= 0.0)
     {
       USER_setErrorCode(pUserParams, USER_ErrorCode_maxCurrentSlope_powerWarp_Low);
     }
 
-  if(USER_MOTOR_TYPE == MOTOR_Type_Pm)
+  if(pUserParams->motor_type == MOTOR_Type_Pm)
     {
-      if(USER_MOTOR_MAGNETIZING_CURRENT > 0.0)
+      if(pUserParams->IdRated > 0.0)
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_IdRated_High);
         }
 
-      if(USER_MOTOR_MAGNETIZING_CURRENT < 0.0)
+      if(pUserParams->IdRated < 0.0)
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_IdRated_Low);
         }
     }
 
-  if(USER_MOTOR_TYPE == MOTOR_Type_Induction)
+  if(pUserParams->motor_type == MOTOR_Type_Induction)
     {
-      if(USER_MOTOR_MAGNETIZING_CURRENT > USER_MOTOR_MAX_CURRENT)
+      if(pUserParams->IdRated > maxCurrent)
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_IdRated_High);
         }
 
-      if(USER_MOTOR_MAGNETIZING_CURRENT < 0.0)
+      if(pUserParams->IdRated < 0.0)
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_IdRated_Low);
         }
     }
 
-  if(USER_MOTOR_TYPE == MOTOR_Type_Induction)
+  if(pUserParams->motor_type == MOTOR_Type_Induction)
     {
-      if(USER_IDRATED_FRACTION_FOR_RATED_FLUX > (USER_IQ_FULL_SCALE_CURRENT_A / (1.2 * USER_MOTOR_MAX_CURRENT)))
+      if(USER_IDRATED_FRACTION_FOR_RATED_FLUX > (USER_IQ_FULL_SCALE_CURRENT_A / (1.2 * maxCurrent)))
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_IdRatedFraction_ratedFlux_High);
         }
@@ -736,9 +751,9 @@ void USER_checkForErrors(USER_Params *pUserParams)
         }
     }
 
-  if(USER_MOTOR_TYPE == MOTOR_Type_Induction)
+  if(pUserParams->motor_type == MOTOR_Type_Induction)
     {
-      if(USER_IDRATED_FRACTION_FOR_L_IDENT > (USER_IQ_FULL_SCALE_CURRENT_A / USER_MOTOR_MAX_CURRENT))
+      if(USER_IDRATED_FRACTION_FOR_L_IDENT > (USER_IQ_FULL_SCALE_CURRENT_A / maxCurrent))
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_IdRatedFraction_indEst_High);
         }
@@ -749,9 +764,9 @@ void USER_checkForErrors(USER_Params *pUserParams)
         }
     }
 
-  if(USER_MOTOR_TYPE == MOTOR_Type_Induction)
+  if(pUserParams->motor_type == MOTOR_Type_Induction)
     {
-      if(USER_IDRATED_DELTA > (USER_IQ_FULL_SCALE_CURRENT_A / ((float_t)USER_NUM_ISR_TICKS_PER_CTRL_TICK * USER_MOTOR_MAX_CURRENT)))
+      if(USER_IDRATED_DELTA > (USER_IQ_FULL_SCALE_CURRENT_A / ((float_t)USER_NUM_ISR_TICKS_PER_CTRL_TICK * maxCurrent)))
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_IdRated_delta_High);
         }
@@ -762,28 +777,28 @@ void USER_checkForErrors(USER_Params *pUserParams)
         }
     }
 
-  if(USER_MOTOR_FLUX_EST_FREQ_Hz > USER_IQ_FULL_SCALE_FREQ_Hz)
+  if(pUserParams->fluxEstFreq_Hz > USER_IQ_FULL_SCALE_FREQ_Hz)
     {
       USER_setErrorCode(pUserParams, USER_ErrorCode_fluxEstFreq_Hz_High);
     }
 
-  if((USER_MOTOR_FLUX_EST_FREQ_Hz < 0.0) ||
-    (USER_MOTOR_FLUX_EST_FREQ_Hz < (USER_ZEROSPEEDLIMIT * USER_IQ_FULL_SCALE_FREQ_Hz)))
+  if((pUserParams->fluxEstFreq_Hz < 0.0) ||
+    (pUserParams->fluxEstFreq_Hz < (USER_ZEROSPEEDLIMIT * USER_IQ_FULL_SCALE_FREQ_Hz)))
     {
       USER_setErrorCode(pUserParams, USER_ErrorCode_fluxEstFreq_Hz_Low);
     }
 
-  if(USER_MOTOR_Ls_d != 0.0)
+  if(pUserParams->motor_Ls_d != 0.0)
     {
-      if(((float_t)USER_CTRL_FREQ_Hz >= (128.0 * USER_IQ_FULL_SCALE_VOLTAGE_V / (0.5 * (USER_MOTOR_Ls_d + 1e-9) * USER_IQ_FULL_SCALE_CURRENT_A))))
+      if(((float_t)USER_CTRL_FREQ_Hz >= (128.0 * USER_IQ_FULL_SCALE_VOLTAGE_V / (0.5 * (pUserParams->motor_Ls_d + 1e-9) * USER_IQ_FULL_SCALE_CURRENT_A))))
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_ctrlFreq_Hz_High);
         }
     }
 
-  if(USER_MOTOR_Ls_q != 0.0)
+  if(pUserParams->motor_Ls_q != 0.0)
     {
-      if(((float_t)USER_CTRL_FREQ_Hz >= (128.0 * USER_IQ_FULL_SCALE_VOLTAGE_V / (0.5 * (USER_MOTOR_Ls_q + 1e-9) * USER_IQ_FULL_SCALE_CURRENT_A))))
+      if(((float_t)USER_CTRL_FREQ_Hz >= (128.0 * USER_IQ_FULL_SCALE_VOLTAGE_V / (0.5 * (pUserParams->motor_Ls_q + 1e-9) * USER_IQ_FULL_SCALE_CURRENT_A))))
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_ctrlFreq_Hz_High);
         }
@@ -792,15 +807,15 @@ void USER_checkForErrors(USER_Params *pUserParams)
   if(((float_t)USER_CTRL_FREQ_Hz < USER_IQ_FULL_SCALE_FREQ_Hz) ||
     ((float_t)USER_CTRL_FREQ_Hz < USER_OFFSET_POLE_rps) ||
     ((float_t)USER_CTRL_FREQ_Hz < 250.0) ||
-    ((float_t)USER_CTRL_FREQ_Hz <= (2.0 * USER_IQ_FULL_SCALE_FREQ_Hz * USER_MOTOR_MAX_CURRENT / (128.0 * USER_IQ_FULL_SCALE_CURRENT_A))))
+    ((float_t)USER_CTRL_FREQ_Hz <= (2.0 * USER_IQ_FULL_SCALE_FREQ_Hz * maxCurrent / (128.0 * USER_IQ_FULL_SCALE_CURRENT_A))))
     {
       USER_setErrorCode(pUserParams, USER_ErrorCode_ctrlFreq_Hz_Low);
     }
 
-  if((USER_MOTOR_Rs != 0.0) && (USER_MOTOR_Ls_d != 0.0) && (USER_MOTOR_Ls_q != 0.0))
+  if((pUserParams->motor_Rs != 0.0) && (pUserParams->motor_Ls_d != 0.0) && (pUserParams->motor_Ls_q != 0.0))
     {
-      if(((float_t)USER_CTRL_FREQ_Hz <= (USER_MOTOR_Rs / (USER_MOTOR_Ls_d + 1e-9))) ||
-        ((float_t)USER_CTRL_FREQ_Hz <= (USER_MOTOR_Rs / (USER_MOTOR_Ls_q + 1e-9))))
+      if(((float_t)USER_CTRL_FREQ_Hz <= (pUserParams->motor_Rs / (pUserParams->motor_Ls_d + 1e-9))) ||
+        ((float_t)USER_CTRL_FREQ_Hz <= (pUserParams->motor_Rs / (pUserParams->motor_Ls_q + 1e-9))))
         {
           USER_setErrorCode(pUserParams, USER_ErrorCode_ctrlFreq_Hz_Low);
         }
@@ -829,12 +844,12 @@ void USER_checkForErrors(USER_Params *pUserParams)
       USER_setErrorCode(pUserParams, USER_ErrorCode_trajFreq_Hz_Low);
     }
 
-  if(USER_MAX_NEGATIVE_ID_REF_CURRENT_A > 0.0)
+  if(pUserParams->maxNegativeIdCurrent_a > 0.0)
     {
       USER_setErrorCode(pUserParams, USER_ErrorCode_maxNegativeIdCurrent_a_High);
     }
 
-  if(USER_MAX_NEGATIVE_ID_REF_CURRENT_A < (-USER_MOTOR_MAX_CURRENT))
+  if(pUserParams->maxNegativeIdCurrent_a < -maxCurrent)
     {
       USER_setErrorCode(pUserParams, USER_ErrorCode_maxNegativeIdCurrent_a_Low);
     }
@@ -945,35 +960,35 @@ void USER_calcPIgains(CTRL_Handle handle)
 
 //! \brief     Computes the scale factor needed to convert from torque created by Ld, Lq, Id and Iq, from per unit to Nm
 //!
-_iq USER_computeTorque_Ls_Id_Iq_pu_to_Nm_sf(void)
+_iq USER_computeTorque_Ls_Id_Iq_pu_to_Nm_sf(float_t motor_Ls_d, uint_least16_t motor_numPolePairs)
 {
   float_t FullScaleInductance = (USER_IQ_FULL_SCALE_VOLTAGE_V/(USER_IQ_FULL_SCALE_CURRENT_A*USER_VOLTAGE_FILTER_POLE_rps));
   float_t FullScaleCurrent = (USER_IQ_FULL_SCALE_CURRENT_A);
-  float_t lShift = ceil(log(USER_MOTOR_Ls_d/(0.7*FullScaleInductance))/log(2.0));
+  float_t lShift = ceil(log(motor_Ls_d/(0.7*FullScaleInductance))/log(2.0));
 
-  return(_IQ(FullScaleInductance*FullScaleCurrent*FullScaleCurrent*USER_MOTOR_NUM_POLE_PAIRS*1.5*pow(2.0,lShift)));
+  return(_IQ(FullScaleInductance*FullScaleCurrent*FullScaleCurrent*motor_numPolePairs*1.5*pow(2.0,lShift)));
 } // end of USER_computeTorque_Ls_Id_Iq_pu_to_Nm_sf() function
 
 
 //! \brief     Computes the scale factor needed to convert from torque created by flux and Iq, from per unit to Nm
 //!
-_iq USER_computeTorque_Flux_Iq_pu_to_Nm_sf(void)
+_iq USER_computeTorque_Flux_Iq_pu_to_Nm_sf(MOTOR_Type_e motor_type, float_t motor_ratedFlux, uint_least16_t motor_numPolePairs)
 {
   float_t FullScaleFlux = (USER_IQ_FULL_SCALE_VOLTAGE_V/(float_t)USER_EST_FREQ_Hz);
   float_t FullScaleCurrent = (USER_IQ_FULL_SCALE_CURRENT_A);
-  float_t maxFlux = (USER_MOTOR_RATED_FLUX*((USER_MOTOR_TYPE==MOTOR_Type_Induction)?0.05:0.7));
+  float_t maxFlux = (motor_ratedFlux * ((motor_type == MOTOR_Type_Induction) ? 0.05 : 0.7));
   float_t lShift = -ceil(log(FullScaleFlux/maxFlux)/log(2.0));
 
-  return(_IQ(FullScaleFlux/(2.0*MATH_PI)*FullScaleCurrent*USER_MOTOR_NUM_POLE_PAIRS*1.5*pow(2.0,lShift)));
+  return(_IQ(FullScaleFlux/(2.0*MATH_PI)*FullScaleCurrent * motor_numPolePairs * 1.5*pow(2.0,lShift)));
 } // end of USER_computeTorque_Flux_Iq_pu_to_Nm_sf() function
 
 
 //! \brief     Computes the scale factor needed to convert from per unit to Wb
 //!
-_iq USER_computeFlux_pu_to_Wb_sf(void)
+_iq USER_computeFlux_pu_to_Wb_sf(MOTOR_Type_e motor_type, float_t motor_ratedFlux, float_t fluxEstFreq_Hz)
 {
-  float_t FullScaleFlux = (USER_IQ_FULL_SCALE_VOLTAGE_V/(float_t)USER_EST_FREQ_Hz);
-  float_t maxFlux = (USER_MOTOR_RATED_FLUX*((USER_MOTOR_TYPE==MOTOR_Type_Induction)?0.05:0.7));
+  float_t FullScaleFlux = (USER_IQ_FULL_SCALE_VOLTAGE_V / fluxEstFreq_Hz);
+  float_t maxFlux = (motor_ratedFlux * ((motor_type==MOTOR_Type_Induction) ? 0.05 : 0.7));
   float_t lShift = -ceil(log(FullScaleFlux/maxFlux)/log(2.0));
 
   return(_IQ(FullScaleFlux/(2.0*MATH_PI)*pow(2.0,lShift)));
@@ -982,10 +997,10 @@ _iq USER_computeFlux_pu_to_Wb_sf(void)
 
 //! \brief     Computes the scale factor needed to convert from per unit to V/Hz
 //!
-_iq USER_computeFlux_pu_to_VpHz_sf(void)
+_iq USER_computeFlux_pu_to_VpHz_sf(MOTOR_Type_e motor_type, float_t motor_ratedFlux, float_t fluxEstFreq_Hz)
 {
-  float_t FullScaleFlux = (USER_IQ_FULL_SCALE_VOLTAGE_V/(float_t)USER_EST_FREQ_Hz);
-  float_t maxFlux = (USER_MOTOR_RATED_FLUX*((USER_MOTOR_TYPE==MOTOR_Type_Induction)?0.05:0.7));
+  float_t FullScaleFlux = (USER_IQ_FULL_SCALE_VOLTAGE_V / fluxEstFreq_Hz);
+  float_t maxFlux = (motor_ratedFlux * ((motor_type == MOTOR_Type_Induction) ? 0.05 : 0.7));
   float_t lShift = -ceil(log(FullScaleFlux/maxFlux)/log(2.0));
 
   return(_IQ(FullScaleFlux*pow(2.0,lShift)));

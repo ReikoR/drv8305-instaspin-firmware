@@ -112,7 +112,8 @@ MATH_vec2 gIdq_pu = { _IQ(0.0), _IQ(0.0) }; // contains the Id and Iq measured v
 #endif
 USER_Params gUserParams;
 
-volatile MOTOR_Vars_t gMotorVars = MOTOR_Vars_INIT; // the global motor variables that are defined in main.h and used for display in the debugger's watch window
+// the global motor variables that are defined in main.h and used for display in the debugger's watch window
+volatile MOTOR_Vars_t gMotorVars = MOTOR_Vars_INIT;
 
 #ifdef FLASH
 // Used for running BackGround in flash, and ISR in RAM
@@ -143,11 +144,13 @@ _iq gTorque_Ls_Id_Iq_pu_to_Nm_sf;
 
 _iq gTorque_Flux_Iq_pu_to_Nm_sf;
 
-_iq gSpeed_krpm_to_pu_sf = _IQ((float_t)USER_MOTOR_NUM_POLE_PAIRS * 1000.0 / (USER_IQ_FULL_SCALE_FREQ_Hz * 60.0));
+_iq gSpeed_krpm_to_pu_sf;
 
-_iq gSpeed_hz_to_krpm_sf = _IQ(60.0 / (float_t)USER_MOTOR_NUM_POLE_PAIRS / 1000.0);
+_iq gSpeed_hz_to_krpm_sf ;
 
-_iq gIs_Max_squared_pu = _IQ((USER_MOTOR_MAX_CURRENT * USER_MOTOR_MAX_CURRENT) / (USER_IQ_FULL_SCALE_CURRENT_A * USER_IQ_FULL_SCALE_CURRENT_A));
+_iq gIs_Max_squared_pu;
+
+_iq maxAccel_kRPMps_sf;
 
 uint16_t gTrjCnt = 0;
 
@@ -207,22 +210,37 @@ void main(void) {
 	            | AIO_read(halHandle->gpioHandle, AIO_Number_14) << 1
 	            | AIO_read(halHandle->gpioHandle, AIO_Number_12);
 
-	HW_Params motor1Params = {
+	HW_Params motorParams = {
 			.motor_type = MOTOR_Type_Pm,
 			.motor_numPolePairs = 11,
-			.motor_Rs = 0.0993900299,
-			.motor_Ls_d = 1.89197344e-05,
-			.motor_Ls_q = 1.89197344e-05,
-			.motor_ratedFlux = 0.00854411535,
 			.maxCurrent_resEst = 1.0,
 			.maxCurrent_indEst = -1.0,
 			.maxCurrent = 10.0,
 			.fluxEstFreq_Hz = 100.0
 	};
 
+	switch (boardId) {
+	case 1:
+	    motorParams.motor_Rs = 0.0993900299;
+	    motorParams.motor_Ls_d = 1.89197344e-05;
+	    motorParams.motor_Ls_q = 1.89197344e-05;
+	    motorParams.motor_ratedFlux = 0.00854411535;
+
+	    gOffsets_I_pu.value[0] = _IQ(0.8245109916);
+        gOffsets_I_pu.value[1] = _IQ(0.8258063197);
+        gOffsets_I_pu.value[2] = _IQ(0.8240211606);
+        gOffsets_V_pu.value[0] = _IQ(0.4940481186);
+        gOffsets_V_pu.value[1] = _IQ(0.4929640293);
+        gOffsets_V_pu.value[2] = _IQ(0.4901292324);
+
+	    break;
+	}
+
 	USER_setCommonParams(&gUserParams);
 
-	USER_setHardwareParams(&gUserParams, &motor1Params);
+	USER_setHardwareParams(&gUserParams, &motorParams);
+
+	USER_calculateOtherParams(&gUserParams);
 
 	// check for errors in user parameters
 	USER_checkForErrors(&gUserParams);
@@ -237,6 +255,17 @@ void main(void) {
 			gMotorVars.Flag_enableSys = false;
 		}
 	}
+
+	gSpeed_krpm_to_pu_sf = _IQ((float_t)gUserParams.motor_numPolePairs * 1000.0 / (USER_IQ_FULL_SCALE_FREQ_Hz * 60.0));
+
+	gSpeed_hz_to_krpm_sf = _IQ(60.0 / (float_t)gUserParams.motor_numPolePairs / 1000.0);
+
+	gIs_Max_squared_pu = _IQ((gUserParams.maxCurrent * gUserParams.maxCurrent) / (USER_IQ_FULL_SCALE_CURRENT_A * USER_IQ_FULL_SCALE_CURRENT_A));
+
+	//! \brief Defines the speed acceleration scale factor.
+	//!
+	//#define MAX_ACCEL_KRPMPS_SF  _IQ(USER_MOTOR_NUM_POLE_PAIRS*1000.0/USER_TRAJ_FREQ_Hz/USER_IQ_FULL_SCALE_FREQ_Hz/60.0)
+	maxAccel_kRPMps_sf = _IQ(gUserParams.motor_numPolePairs * 1000.0 / USER_TRAJ_FREQ_Hz / USER_IQ_FULL_SCALE_FREQ_Hz / 60.0);
 
 	// initialize the Clarke modules
 	// Clarke handle initialization for current signals
@@ -308,19 +337,19 @@ void main(void) {
 	setupClarke_V(clarkeHandle_V, USER_NUM_VOLTAGE_SENSORS);
 
 	// set the pre-determined current and voltage feeback offset values
-	gOffsets_I_pu.value[0] = _IQ(I_A_offset);
+	/*gOffsets_I_pu.value[0] = _IQ(I_A_offset);
 	gOffsets_I_pu.value[1] = _IQ(I_B_offset);
 	gOffsets_I_pu.value[2] = _IQ(I_C_offset);
 	gOffsets_V_pu.value[0] = _IQ(V_A_offset);
 	gOffsets_V_pu.value[1] = _IQ(V_B_offset);
-	gOffsets_V_pu.value[2] = _IQ(V_C_offset);
+	gOffsets_V_pu.value[2] = _IQ(V_C_offset);*/
 
 	// initialize the PID controllers
 	{
 		// This equation defines the relationship between per unit current and
 		// real-world current. The resulting value in per units (pu) is then
 		// used to configure the controllers
-		_iq maxCurrent_pu = _IQ(USER_MOTOR_MAX_CURRENT / USER_IQ_FULL_SCALE_CURRENT_A);
+		_iq maxCurrent_pu = _IQ(gUserParams.maxCurrent / USER_IQ_FULL_SCALE_CURRENT_A);
 
 		// This equation uses the scaled maximum voltage vector, which is
 		// already in per units, hence there is no need to include the #define
@@ -330,9 +359,9 @@ void main(void) {
 		float_t fullScaleCurrent = USER_IQ_FULL_SCALE_CURRENT_A;
 		float_t fullScaleVoltage = USER_IQ_FULL_SCALE_VOLTAGE_V;
 		float_t IsrPeriod_sec = 1.0 / USER_ISR_FREQ_Hz;
-		float_t Ls_d = USER_MOTOR_Ls_d;
-		float_t Ls_q = USER_MOTOR_Ls_q;
-		float_t Rs = USER_MOTOR_Rs;
+		float_t Ls_d = gUserParams.motor_Ls_d;
+		float_t Ls_q = gUserParams.motor_Ls_q;
+		float_t Rs = gUserParams.motor_Rs;
 
 		// This lab assumes that motor parameters are known, and it does not
 		// perform motor ID, so the R/L parameters are known and defined in
@@ -446,9 +475,9 @@ void main(void) {
 	// configure the Id reference trajectory
 	TRAJ_setTargetValue(trajHandle_Id, _IQ(0.0));
 	TRAJ_setIntValue(trajHandle_Id, _IQ(0.0));
-	TRAJ_setMinValue(trajHandle_Id, _IQ(-USER_MOTOR_MAX_CURRENT / USER_IQ_FULL_SCALE_CURRENT_A));
-	TRAJ_setMaxValue(trajHandle_Id, _IQ(USER_MOTOR_MAX_CURRENT / USER_IQ_FULL_SCALE_CURRENT_A));
-	TRAJ_setMaxDelta(trajHandle_Id, _IQ(USER_MOTOR_RES_EST_CURRENT / USER_IQ_FULL_SCALE_CURRENT_A / USER_ISR_FREQ_Hz));
+	TRAJ_setMinValue(trajHandle_Id, _IQ(-gUserParams.maxCurrent / USER_IQ_FULL_SCALE_CURRENT_A));
+	TRAJ_setMaxValue(trajHandle_Id, _IQ(gUserParams.maxCurrent / USER_IQ_FULL_SCALE_CURRENT_A));
+	TRAJ_setMaxDelta(trajHandle_Id, _IQ(gUserParams.maxCurrent_resEst / USER_IQ_FULL_SCALE_CURRENT_A / USER_ISR_FREQ_Hz));
 
 	// setup faults
 	HAL_setupFaults(halHandle);
@@ -472,10 +501,10 @@ void main(void) {
 	HAL_disablePwm(halHandle);
 
 	// compute scaling factors for flux and torque calculations
-	gFlux_pu_to_Wb_sf = USER_computeFlux_pu_to_Wb_sf();
-	gFlux_pu_to_VpHz_sf = USER_computeFlux_pu_to_VpHz_sf();
-	gTorque_Ls_Id_Iq_pu_to_Nm_sf = USER_computeTorque_Ls_Id_Iq_pu_to_Nm_sf();
-	gTorque_Flux_Iq_pu_to_Nm_sf = USER_computeTorque_Flux_Iq_pu_to_Nm_sf();
+	gFlux_pu_to_Wb_sf = USER_computeFlux_pu_to_Wb_sf(gUserParams.motor_type, gUserParams.motor_ratedFlux, gUserParams.fluxEstFreq_Hz);
+	gFlux_pu_to_VpHz_sf = USER_computeFlux_pu_to_VpHz_sf(gUserParams.motor_type, gUserParams.motor_ratedFlux, gUserParams.fluxEstFreq_Hz);
+	gTorque_Ls_Id_Iq_pu_to_Nm_sf = USER_computeTorque_Ls_Id_Iq_pu_to_Nm_sf(gUserParams.motor_Ls_d, gUserParams.motor_numPolePairs);
+	gTorque_Flux_Iq_pu_to_Nm_sf = USER_computeTorque_Flux_Iq_pu_to_Nm_sf(gUserParams.motor_type, gUserParams.motor_ratedFlux, gUserParams.motor_numPolePairs);
 
 	// enable the system by default
 	gMotorVars.Flag_enableSys = true;
@@ -578,8 +607,8 @@ void main(void) {
                 TRAJ_setIntValue(trajHandle_Id, _IQ(0.0));
 
                 // configure trajectory Id defaults depending on motor type
-				TRAJ_setMinValue(trajHandle_Id, _IQ(-USER_MOTOR_MAX_CURRENT / USER_IQ_FULL_SCALE_CURRENT_A));
-				TRAJ_setMaxDelta(trajHandle_Id, _IQ(USER_MOTOR_RES_EST_CURRENT / USER_IQ_FULL_SCALE_CURRENT_A / USER_ISR_FREQ_Hz));
+				TRAJ_setMinValue(trajHandle_Id, _IQ(-gUserParams.maxCurrent / USER_IQ_FULL_SCALE_CURRENT_A));
+				TRAJ_setMaxDelta(trajHandle_Id, _IQ(gUserParams.maxCurrent_resEst / USER_IQ_FULL_SCALE_CURRENT_A / USER_ISR_FREQ_Hz));
 
 				// clear integrator outputs
 				PID_setUi(pidHandle[0], _IQ(0.0));
@@ -595,7 +624,7 @@ void main(void) {
 			updateGlobalVariables(estHandle);
 
             // set the speed acceleration
-            TRAJ_setMaxDelta(trajHandle_spd, _IQmpy(MAX_ACCEL_KRPMPS_SF, gMotorVars.MaxAccel_krpmps));
+            TRAJ_setMaxDelta(trajHandle_spd, _IQmpy(maxAccel_kRPMps_sf, gMotorVars.MaxAccel_krpmps));
 
 			// enable/disable the forced angle
 			EST_setFlag_enableForceAngle(estHandle, gMotorVars.Flag_enableForceAngle);
@@ -919,15 +948,15 @@ _iq angleDelayComp(const _iq fm_pu, const _iq angleUncomp_pu) {
 //! \brief  implementation of InstaSPIN (version 1.6 of ROM) since the
 //! \brief  inductance calculation is not done correctly in ROM, so this
 //! \brief  function fixes that ROM bug.
-void softwareUpdate1p6(EST_Handle handle) {
+void softwareUpdate1p6(EST_Handle handle, USER_Params *pUserParams) {
 	float_t fullScaleInductance = USER_IQ_FULL_SCALE_VOLTAGE_V
 			/ (USER_IQ_FULL_SCALE_CURRENT_A * USER_VOLTAGE_FILTER_POLE_rps);
 	float_t Ls_coarse_max = _IQ30toF(EST_getLs_coarse_max_pu(handle));
-	int_least8_t lShift = ceil(log(USER_MOTOR_Ls_d / (Ls_coarse_max * fullScaleInductance)) / log(2.0));
+	int_least8_t lShift = ceil(log(pUserParams->motor_Ls_d / (Ls_coarse_max * fullScaleInductance)) / log(2.0));
 	uint_least8_t Ls_qFmt = 30 - lShift;
 	float_t L_max = fullScaleInductance * pow(2.0, lShift);
-	_iq Ls_d_pu = _IQ30(USER_MOTOR_Ls_d / L_max);
-	_iq Ls_q_pu = _IQ30(USER_MOTOR_Ls_q / L_max);
+	_iq Ls_d_pu = _IQ30(pUserParams->motor_Ls_d / L_max);
+	_iq Ls_q_pu = _IQ30(pUserParams->motor_Ls_q / L_max);
 
 	// store the results
 	EST_setLs_d_pu(handle, Ls_d_pu);
