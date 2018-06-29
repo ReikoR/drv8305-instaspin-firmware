@@ -224,23 +224,61 @@ void main(void) {
 
 	switch (boardId) {
 	case 1:
+		gUserParams.motor_Rs = 0.100860126;
+		gUserParams.motor_Ls_d = 1.7285638e-05;
+		gUserParams.motor_Ls_q = 1.7285638e-05;
+		gUserParams.motor_ratedFlux = 0.00854343083;
+
+		gOffsets_I_pu.value[0] = _IQ(0.8262578845);
+		gOffsets_I_pu.value[1] = _IQ(0.8279626966);
+		gOffsets_I_pu.value[2] = _IQ(0.8257436752);
+		gOffsets_V_pu.value[0] = _IQ(0.3284417987);
+		gOffsets_V_pu.value[1] = _IQ(0.3277156353);
+		gOffsets_V_pu.value[2] = _IQ(0.3258029819);
+
+		break;
 	case 2:
+		gUserParams.motor_Rs = 0.105435126;
+		gUserParams.motor_Ls_d = 1.81907089e-05;
+		gUserParams.motor_Ls_q = 1.81907089e-05;
+		gUserParams.motor_ratedFlux = 0.0084449742;
+
+		gOffsets_I_pu.value[0] = _IQ(0.8268041015);
+		gOffsets_I_pu.value[1] = _IQ(0.8226225972);
+		gOffsets_I_pu.value[2] = _IQ(0.8224254251);
+		gOffsets_V_pu.value[0] = _IQ(0.3274108768);
+		gOffsets_V_pu.value[1] = _IQ(0.3260739446);
+		gOffsets_V_pu.value[2] = _IQ(0.3248469234);
+
+		break;
 	case 3:
+		gUserParams.motor_Rs = 0.0968401432;
+		gUserParams.motor_Ls_d = 2.05874894e-05;
+		gUserParams.motor_Ls_q = 2.05874894e-05;
+		gUserParams.motor_ratedFlux = 0.00830086786;
+
+		gOffsets_I_pu.value[0] = _IQ(0.8261603713);
+		gOffsets_I_pu.value[1] = _IQ(0.8264429569);
+		gOffsets_I_pu.value[2] = _IQ(0.8232181072);
+		gOffsets_V_pu.value[0] = _IQ(0.3282379508);
+		gOffsets_V_pu.value[1] = _IQ(0.327147007);
+		gOffsets_V_pu.value[2] = _IQ(0.327105701);
+
+		break;
 	case 4:
-		gUserParams.motor_Rs = 0.0993900299;
-		gUserParams.motor_Ls_d = 1.89197344e-05;
-		gUserParams.motor_Ls_q = 1.89197344e-05;
-		gUserParams.motor_ratedFlux = 0.00854411535;
+		gUserParams.motor_Rs = 0.10089013;
+		gUserParams.motor_Ls_d = 1.77857091e-05;
+		gUserParams.motor_Ls_q = 1.77857091e-05;
+		gUserParams.motor_ratedFlux = 0.00845063478;
 
-	    gOffsets_I_pu.value[0] = _IQ(0.8245109916);
-        gOffsets_I_pu.value[1] = _IQ(0.8258063197);
-        gOffsets_I_pu.value[2] = _IQ(0.8240211606);
-        gOffsets_V_pu.value[0] = _IQ(0.4940481186);
-        gOffsets_V_pu.value[1] = _IQ(0.4929640293);
-        gOffsets_V_pu.value[2] = _IQ(0.4901292324);
+		gOffsets_I_pu.value[0] = _IQ(0.829452455);
+		gOffsets_I_pu.value[1] = _IQ(0.8294689655);
+		gOffsets_I_pu.value[2] = _IQ(0.8316786289);
+		gOffsets_V_pu.value[0] = _IQ(0.3286672235);
+		gOffsets_V_pu.value[1] = _IQ(0.3275545239);
+		gOffsets_V_pu.value[2] = _IQ(0.3269300461);
 
-	    break;
-
+		break;
 	default:
 		for (;;) {
 			gMotorVars.Flag_enableSys = false;
