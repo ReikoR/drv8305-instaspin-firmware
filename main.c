@@ -210,21 +210,24 @@ void main(void) {
 	            | AIO_read(halHandle->gpioHandle, AIO_Number_14) << 1
 	            | AIO_read(halHandle->gpioHandle, AIO_Number_12);
 
-	HW_Params motorParams = {
-			.motor_type = MOTOR_Type_Pm,
-			.motor_numPolePairs = 11,
-			.maxCurrent_resEst = 1.0,
-			.maxCurrent_indEst = -1.0,
-			.maxCurrent = 10.0,
-			.fluxEstFreq_Hz = 100.0
-	};
+	gUserParams.motor_type = MOTOR_Type_Pm;
+	gUserParams.motor_numPolePairs = 11;
+	gUserParams.maxCurrent_resEst = 1.0;
+	gUserParams.maxCurrent_indEst = -1.0;
+	gUserParams.maxCurrent = 10.0;
+	gUserParams.fluxEstFreq_Hz = 100.0;
+	gUserParams.IdRated = 0.0;
+	gUserParams.motor_Rr = 0.0;
 
 	switch (boardId) {
 	case 1:
-	    motorParams.motor_Rs = 0.0993900299;
-	    motorParams.motor_Ls_d = 1.89197344e-05;
-	    motorParams.motor_Ls_q = 1.89197344e-05;
-	    motorParams.motor_ratedFlux = 0.00854411535;
+	case 2:
+	case 3:
+	case 4:
+		gUserParams.motor_Rs = 0.0993900299;
+		gUserParams.motor_Ls_d = 1.89197344e-05;
+		gUserParams.motor_Ls_q = 1.89197344e-05;
+		gUserParams.motor_ratedFlux = 0.00854411535;
 
 	    gOffsets_I_pu.value[0] = _IQ(0.8245109916);
         gOffsets_I_pu.value[1] = _IQ(0.8258063197);
@@ -234,11 +237,14 @@ void main(void) {
         gOffsets_V_pu.value[2] = _IQ(0.4901292324);
 
 	    break;
+
+	default:
+		for (;;) {
+			gMotorVars.Flag_enableSys = false;
+		}
 	}
 
 	USER_setCommonParams(&gUserParams);
-
-	USER_setHardwareParams(&gUserParams, &motorParams);
 
 	USER_calculateOtherParams(&gUserParams);
 

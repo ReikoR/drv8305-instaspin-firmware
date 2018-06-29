@@ -54,7 +54,6 @@
 
 // platforms
 #include "modules/fast/userParams.h"
-#include "hardwareParams.h"
 
 //!
 //!
@@ -437,7 +436,6 @@ extern "C" {
 //! \param[in]  pUserParams  The pointer to the user param structure
 extern void USER_setCommonParams(USER_Params *pUserParams);
 
-extern void USER_setHardwareParams(USER_Params *pUserParams, HW_Params *hwParams);
 
 extern void USER_calculateOtherParams(USER_Params *pUserParams);
 

@@ -42,8 +42,6 @@
 #include "user.h"
 #include "modules/ctrl/ctrl.h"
 
-#include "hardwareParams.h"
-
 // **************************************************************************
 // the defines
 
@@ -193,26 +191,6 @@ void USER_setCommonParams(USER_Params *pUserParams)
 
   return;
 } // end of USER_setParams() function
-
-
-void USER_setHardwareParams(USER_Params *pUserParams, HW_Params *hwParams) {
-	pUserParams->motor_type = hwParams->motor_type;
-	pUserParams->motor_numPolePairs = hwParams->motor_numPolePairs;
-	pUserParams->motor_ratedFlux = hwParams->motor_ratedFlux;
-	pUserParams->motor_Rr = hwParams->motor_Rr;
-	pUserParams->motor_Rs = hwParams->motor_Rs;
-	pUserParams->motor_Ls_d = hwParams->motor_Ls_d;
-	pUserParams->motor_Ls_q = hwParams->motor_Ls_q;
-
-	pUserParams->maxCurrent_resEst = hwParams->maxCurrent_resEst;
-	pUserParams->maxCurrent_indEst = hwParams->maxCurrent_indEst;
-	pUserParams->maxCurrent = hwParams->maxCurrent;
-
-	pUserParams->IdRated = hwParams->IdRated;
-
-	pUserParams->fluxEstFreq_Hz = hwParams->fluxEstFreq_Hz;
-}
-
 
 void USER_calculateOtherParams(USER_Params *pUserParams) {
 	//! \brief Defines the maximum current slope for Id trajectory during estimation
