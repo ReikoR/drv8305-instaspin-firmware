@@ -166,6 +166,9 @@ int txOffDelayCounter = 0;
 bool isTxOffDelayActive = false;
 bool shouldSendSpeed = false;
 
+volatile bool isVoltageTooLow = true;
+_iq lowVoltageThreshold = _IQ(0.01);
+
 // **************************************************************************
 // the functions
 void main(void) {
@@ -577,7 +580,7 @@ void main(void) {
 
 			// If Flag_enableSys is set AND Flag_Run_Identify is set THEN
 			// enable PWMs and set the speed reference
-			if (gMotorVars.Flag_Run_Identify) {
+			if (gMotorVars.Flag_Run_Identify & !isVoltageTooLow) {
 				// update estimator state
 				EST_updateState(estHandle, 0);
 
@@ -627,6 +630,17 @@ void main(void) {
 				// clear Id and Iq references
 				gIdq_ref_pu.value[0] = _IQ(0.0);
 				gIdq_ref_pu.value[1] = _IQ(0.0);
+			}
+
+			if (isVoltageTooLow && gMotorVars.VdcBus_kV > lowVoltageThreshold) {
+				isVoltageTooLow = false;
+
+			} else if (!isVoltageTooLow && gMotorVars.VdcBus_kV < lowVoltageThreshold) {
+				isVoltageTooLow = true;
+			}
+
+			if (isVoltageTooLow) {
+				gMotorVars.Flag_Run_Identify = false;
 			}
 
 			// update the global variables
