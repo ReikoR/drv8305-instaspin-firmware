@@ -515,6 +515,9 @@ void main(void) {
 	// enable the system by default
 	gMotorVars.Flag_enableSys = true;
 
+	gMotorVars.Kp_spd = _IQ(4.0);
+	gMotorVars.MaxAccel_krpmps = _IQ(10.0);
+
 #ifdef DRV8301_SPI
 	// turn on the DRV8301 if present
 	HAL_enableDrv(halHandle);
