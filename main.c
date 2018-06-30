@@ -62,7 +62,7 @@
 // **************************************************************************
 // the globals
 
-uint16_t boardId = 0;
+uint16_t boardId = 9;
 
 CLARKE_Handle clarkeHandle_I; // the handle for the current Clarke transform
 CLARKE_Obj clarke_I; // the current Clarke transform object
@@ -209,8 +209,7 @@ void main(void) {
 
 	HAL_setupGpios(halHandle);
 
-	boardId = GPIO_read(halHandle->gpioHandle, GPIO_Number_34) << 2
-	            | AIO_read(halHandle->gpioHandle, AIO_Number_14) << 1
+	boardId = AIO_read(halHandle->gpioHandle, AIO_Number_14) << 1
 	            | AIO_read(halHandle->gpioHandle, AIO_Number_12);
 
 	gUserParams.motor_type = MOTOR_Type_Pm;
@@ -223,7 +222,7 @@ void main(void) {
 	gUserParams.motor_Rr = 0.0;
 
 	switch (boardId) {
-	case 1:
+	case 0:
 		gUserParams.motor_Rs = 0.100860126;
 		gUserParams.motor_Ls_d = 1.7285638e-05;
 		gUserParams.motor_Ls_q = 1.7285638e-05;
@@ -237,7 +236,7 @@ void main(void) {
 		gOffsets_V_pu.value[2] = _IQ(0.3258029819);
 
 		break;
-	case 2:
+	case 1:
 		gUserParams.motor_Rs = 0.105435126;
 		gUserParams.motor_Ls_d = 1.81907089e-05;
 		gUserParams.motor_Ls_q = 1.81907089e-05;
@@ -251,7 +250,7 @@ void main(void) {
 		gOffsets_V_pu.value[2] = _IQ(0.3248469234);
 
 		break;
-	case 3:
+	case 2:
 		gUserParams.motor_Rs = 0.0968401432;
 		gUserParams.motor_Ls_d = 2.05874894e-05;
 		gUserParams.motor_Ls_q = 2.05874894e-05;
@@ -265,7 +264,7 @@ void main(void) {
 		gOffsets_V_pu.value[2] = _IQ(0.327105701);
 
 		break;
-	case 4:
+	case 3:
 		gUserParams.motor_Rs = 0.10089013;
 		gUserParams.motor_Ls_d = 1.77857091e-05;
 		gUserParams.motor_Ls_q = 1.77857091e-05;
