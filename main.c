@@ -223,59 +223,59 @@ void main(void) {
 
 	switch (boardId) {
 	case 0:
-		gUserParams.motor_Rs = 0.100860126;
-		gUserParams.motor_Ls_d = 1.7285638e-05;
-		gUserParams.motor_Ls_q = 1.7285638e-05;
-		gUserParams.motor_ratedFlux = 0.00854343083;
+		gUserParams.motor_Rs = 0.0985651314;
+		gUserParams.motor_Ls_d = 1.79431263e-05;
+		gUserParams.motor_Ls_q = 1.79431263e-05;
+		gUserParams.motor_ratedFlux = 0.00855393894;
 
-		gOffsets_I_pu.value[0] = _IQ(0.8262578845);
-		gOffsets_I_pu.value[1] = _IQ(0.8279626966);
-		gOffsets_I_pu.value[2] = _IQ(0.8257436752);
-		gOffsets_V_pu.value[0] = _IQ(0.3284417987);
-		gOffsets_V_pu.value[1] = _IQ(0.3277156353);
-		gOffsets_V_pu.value[2] = _IQ(0.3258029819);
+		gOffsets_I_pu.value[0] = _IQ(0.8177917004);
+		gOffsets_I_pu.value[1] = _IQ(0.8192097545);
+		gOffsets_I_pu.value[2] = _IQ(0.8173087835);
+		gOffsets_V_pu.value[0] = _IQ(0.33653754);
+		gOffsets_V_pu.value[1] = _IQ(0.3357775211);
+		gOffsets_V_pu.value[2] = _IQ(0.3337659836);
 
 		break;
 	case 1:
-		gUserParams.motor_Rs = 0.105435126;
-		gUserParams.motor_Ls_d = 1.81907089e-05;
-		gUserParams.motor_Ls_q = 1.81907089e-05;
-		gUserParams.motor_ratedFlux = 0.0084449742;
+		gUserParams.motor_Rs = 0.0991201326;
+		gUserParams.motor_Ls_d = 1.44964561e-05;
+		gUserParams.motor_Ls_q = 1.44964561e-05;
+		gUserParams.motor_ratedFlux = 0.00846769102;
 
-		gOffsets_I_pu.value[0] = _IQ(0.8268041015);
-		gOffsets_I_pu.value[1] = _IQ(0.8226225972);
-		gOffsets_I_pu.value[2] = _IQ(0.8224254251);
-		gOffsets_V_pu.value[0] = _IQ(0.3274108768);
-		gOffsets_V_pu.value[1] = _IQ(0.3260739446);
-		gOffsets_V_pu.value[2] = _IQ(0.3248469234);
+		gOffsets_I_pu.value[0] = _IQ(0.8316370845);
+		gOffsets_I_pu.value[1] = _IQ(0.8313304186);
+		gOffsets_I_pu.value[2] = _IQ(0.8334515691);
+		gOffsets_V_pu.value[0] = _IQ(0.3365263343);
+		gOffsets_V_pu.value[1] = _IQ(0.3354108334);
+		gOffsets_V_pu.value[2] = _IQ(0.3346902132);
 
 		break;
 	case 2:
-		gUserParams.motor_Rs = 0.0968401432;
-		gUserParams.motor_Ls_d = 2.05874894e-05;
-		gUserParams.motor_Ls_q = 2.05874894e-05;
-		gUserParams.motor_ratedFlux = 0.00830086786;
+		gUserParams.motor_Rs = 0.0954151377;
+		gUserParams.motor_Ls_d = 2.32934599e-05;
+		gUserParams.motor_Ls_q = 2.32934599e-05;
+		gUserParams.motor_ratedFlux = 0.00827274844;
 
-		gOffsets_I_pu.value[0] = _IQ(0.8261603713);
-		gOffsets_I_pu.value[1] = _IQ(0.8264429569);
-		gOffsets_I_pu.value[2] = _IQ(0.8232181072);
-		gOffsets_V_pu.value[0] = _IQ(0.3282379508);
-		gOffsets_V_pu.value[1] = _IQ(0.327147007);
-		gOffsets_V_pu.value[2] = _IQ(0.327105701);
+		gOffsets_I_pu.value[0] = _IQ(0.8298227787);
+		gOffsets_I_pu.value[1] = _IQ(0.8256982565);
+		gOffsets_I_pu.value[2] = _IQ(0.825410068);
+		gOffsets_V_pu.value[0] = _IQ(0.3352851272);
+		gOffsets_V_pu.value[1] = _IQ(0.3338546753);
+		gOffsets_V_pu.value[2] = _IQ(0.3326053619);
 
 		break;
 	case 3:
-		gUserParams.motor_Rs = 0.10089013;
-		gUserParams.motor_Ls_d = 1.77857091e-05;
-		gUserParams.motor_Ls_q = 1.77857091e-05;
-		gUserParams.motor_ratedFlux = 0.00845063478;
+		gUserParams.motor_Rs = 0.10044013;
+		gUserParams.motor_Ls_d = 1.82934727e-05;
+		gUserParams.motor_Ls_q = 1.82934727e-05;
+		gUserParams.motor_ratedFlux = 0.00846751314;
 
-		gOffsets_I_pu.value[0] = _IQ(0.829452455);
-		gOffsets_I_pu.value[1] = _IQ(0.8294689655);
-		gOffsets_I_pu.value[2] = _IQ(0.8316786289);
-		gOffsets_V_pu.value[0] = _IQ(0.3286672235);
-		gOffsets_V_pu.value[1] = _IQ(0.3275545239);
-		gOffsets_V_pu.value[2] = _IQ(0.3269300461);
+		gOffsets_I_pu.value[0] = _IQ(0.8258392811);
+		gOffsets_I_pu.value[1] = _IQ(0.8266688585);
+		gOffsets_I_pu.value[2] = _IQ(0.8232070804);
+		gOffsets_V_pu.value[0] = _IQ(0.3361319304);
+		gOffsets_V_pu.value[1] = _IQ(0.33497262);
+		gOffsets_V_pu.value[2] = _IQ(0.3349607587);
 
 		break;
 	default:
