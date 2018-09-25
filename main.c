@@ -223,10 +223,10 @@ void main(void) {
 
 	switch (boardId) {
 	case 0:
-		gUserParams.motor_Rs = 0.0985651314;
-		gUserParams.motor_Ls_d = 1.79431263e-05;
-		gUserParams.motor_Ls_q = 1.79431263e-05;
-		gUserParams.motor_ratedFlux = 0.00855393894;
+		gUserParams.motor_Rs = 0.107265115;
+		gUserParams.motor_Ls_d = 3.12517477e-05;
+		gUserParams.motor_Ls_q = 3.12517477e-05;
+		gUserParams.motor_ratedFlux = 0.00900697522;
 
 		gOffsets_I_pu.value[0] = _IQ(0.8177917004);
 		gOffsets_I_pu.value[1] = _IQ(0.8192097545);
@@ -237,10 +237,10 @@ void main(void) {
 
 		break;
 	case 1:
-		gUserParams.motor_Rs = 0.0991201326;
-		gUserParams.motor_Ls_d = 1.44964561e-05;
-		gUserParams.motor_Ls_q = 1.44964561e-05;
-		gUserParams.motor_ratedFlux = 0.00846769102;
+		gUserParams.motor_Rs = 0.105945125;
+		gUserParams.motor_Ls_d = 3.16500373e-05;
+		gUserParams.motor_Ls_q = 3.16500373e-05;
+		gUserParams.motor_ratedFlux = 0.00905752275;
 
 		gOffsets_I_pu.value[0] = _IQ(0.8316370845);
 		gOffsets_I_pu.value[1] = _IQ(0.8313304186);
@@ -251,10 +251,10 @@ void main(void) {
 
 		break;
 	case 2:
-		gUserParams.motor_Rs = 0.0954151377;
-		gUserParams.motor_Ls_d = 2.32934599e-05;
-		gUserParams.motor_Ls_q = 2.32934599e-05;
-		gUserParams.motor_ratedFlux = 0.00827274844;
+		gUserParams.motor_Rs = 0.107190125;
+		gUserParams.motor_Ls_d = 2.98830946e-05;
+		gUserParams.motor_Ls_q = 2.98830946e-05;
+		gUserParams.motor_ratedFlux = 0.00911977142;
 
 		gOffsets_I_pu.value[0] = _IQ(0.8298227787);
 		gOffsets_I_pu.value[1] = _IQ(0.8256982565);
@@ -265,10 +265,10 @@ void main(void) {
 
 		break;
 	case 3:
-		gUserParams.motor_Rs = 0.10044013;
-		gUserParams.motor_Ls_d = 1.82934727e-05;
-		gUserParams.motor_Ls_q = 1.82934727e-05;
-		gUserParams.motor_ratedFlux = 0.00846751314;
+		gUserParams.motor_Rs = 0.108435117;
+		gUserParams.motor_Ls_d = 3.06930924e-05;
+		gUserParams.motor_Ls_q = 3.06930924e-05;
+		gUserParams.motor_ratedFlux = 0.00908302981;
 
 		gOffsets_I_pu.value[0] = _IQ(0.8258392811);
 		gOffsets_I_pu.value[1] = _IQ(0.8266688585);
